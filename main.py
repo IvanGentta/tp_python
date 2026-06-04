@@ -1,12 +1,13 @@
 import pygame
 import sys
+from juego import iniciar_juego
 
 # Inicializa todos los módulos de pygame
 pygame.init()
 
 # Ancho y alto de la ventana
-ANCHO = 1000
-ALTO = 700
+ANCHO = 1200
+ALTO = 900
 
 # Crea la ventana del juego
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
@@ -20,10 +21,18 @@ reloj = pygame.time.Clock()
 fuente_titulo = pygame.font.SysFont("arial", 60, bold=True)
 fuente_boton = pygame.font.SysFont("arial", 40)
 
+# Img fondo
+fondo_menu = pygame.image.load("img/parrilla_alta.png").convert()
+
+fondo_menu = pygame.transform.scale(
+    fondo_menu,
+    (ANCHO, ALTO)
+)
+
 # Botones Parámetros: (pos_x, pos_y, ancho, alto)
-boton_jugar = pygame.Rect(350, 200, 350, 90)
-boton_instrucciones = pygame.Rect(350, 350, 350, 90)
-boton_salir = pygame.Rect(350, 500, 350, 90)
+boton_jugar = pygame.Rect(430, 200, 350, 90)
+boton_instrucciones = pygame.Rect(430, 350, 350, 90)
+boton_salir = pygame.Rect(430, 500, 350, 90)
 
 # Variable que controla el bucle principal
 # Mientras sea True el programa sigue abierto
@@ -39,29 +48,40 @@ while ejecutando:
         if evento.type == pygame.MOUSEBUTTONDOWN:
 
             if boton_jugar.collidepoint(evento.pos):
-                print("Iniciar juego")
+                ejecutando = False
+                iniciar_juego()
 
             if boton_salir.collidepoint(evento.pos):
                 ejecutando = False
 
     # Fondo
-    pantalla.fill((160, 139, 34))
+    pantalla.blit(fondo_menu, (0, 0))
 
     # Título
+    titulo_sombra = fuente_titulo.render(
+    "MAESTRO PARRILLERO",
+    True,
+    (0, 0, 0)
+    )
+
+    rect_sombra = titulo_sombra.get_rect(
+    center=(ANCHO // 2 + 3, 45 + 3)
+    )
+
+    pantalla.blit(titulo_sombra, rect_sombra)
+
+    # Texto principal
     titulo = fuente_titulo.render(
-        "MAESTRO PARRILLERO",
-        True,
-        (255, 255, 255)
+    "MAESTRO PARRILLERO",
+    True,
+    (255, 255, 255)
     )
 
     rect_titulo = titulo.get_rect(
-        center=(ANCHO // 2, 90)
+    center=(ANCHO // 2, 45)
     )
 
-    pantalla.blit(
-        titulo,
-        rect_titulo
-    )
+    pantalla.blit(titulo, rect_titulo)
 
     ANCHO_BOTON = 350
     ALTO_BOTON = 90
