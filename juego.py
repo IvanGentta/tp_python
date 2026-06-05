@@ -68,15 +68,28 @@ def iniciar_juego():
 
     ejecutando = True
 
+    #logica inicial carbon
     nivel_carbon = 50
     ultimo_tiempo_carbon = pygame.time.get_ticks()
-
     carbon_rect = carbon.get_rect(topleft=(1020, 650))
+
+    #temporizador de partida
+    TIEMPO_PARTIDA = 180
+    inicio_partida = pygame.time.get_ticks()
+    fuente_timer = pygame.font.SysFont("arial", 40, bold=True)
 
     while ejecutando:
 
-        tiempo_actual = pygame.time.get_ticks()
+        #temporizador
+        tiempo_transcurrido = (pygame.time.get_ticks() - inicio_partida) // 1000
+        tiempo_restante = TIEMPO_PARTIDA - tiempo_transcurrido
+        if tiempo_restante <= 0:
+            tiempo_restante = 0
+            game_over(pantalla,"¡Se termino el tiempo!")
+            return
 
+        #funcionalidad del carbon 
+        tiempo_actual = pygame.time.get_ticks()
         mouse_pos = pygame.mouse.get_pos()
         hover_carbon = carbon_rect.collidepoint(mouse_pos)
 
@@ -85,14 +98,18 @@ def iniciar_juego():
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
+        #reduccion constante de nivel carbon
         if tiempo_actual - ultimo_tiempo_carbon >= 1000:
             nivel_carbon -= 5
 
             if nivel_carbon < 0:
                 nivel_carbon = 0
+                game_over(pantalla,"¡Que mal! Se te apago el fuego :(")
+                return
         
             ultimo_tiempo_carbon = tiempo_actual
 
+        #cambios parrilla segun carbon
         if nivel_carbon > 66:
             parrilla_actual = fuego_alto
             color_barra_carbon = (220, 0, 0)
@@ -134,7 +151,8 @@ def iniciar_juego():
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-                
+            
+            #agregar mas carbon
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if carbon_rect.collidepoint(evento.pos):
                     nivel_carbon += 5
@@ -184,13 +202,13 @@ def iniciar_juego():
         if hover_carbon:
             pygame.draw.rect(pantalla,(255, 255, 0),carbon_rect,4)
         # Fondo barra carbón
-        pygame.draw.rect(pantalla,(80, 80, 80),(900, 50, 250, 30))
+        pygame.draw.rect(pantalla,(80, 80, 80),(940, 50, 250, 30))
 
         # Nivel actual
-        pygame.draw.rect(pantalla,color_barra_carbon,(900, 50, nivel_carbon * 2.5, 30))
+        pygame.draw.rect(pantalla,color_barra_carbon,(940, 50, nivel_carbon * 2.5, 30))
 
         # Borde
-        pygame.draw.rect(pantalla,(255, 255, 255),(900, 50, 250, 30),2)
+        pygame.draw.rect(pantalla,(255, 255, 255),(940, 50, 250, 30),2)
         pantalla.blit(parrilla_actual, (10, 190))
         
         # Dibujamos visualmente las siluetas fijas de los 4 slots de arriba
@@ -228,6 +246,108 @@ def iniciar_juego():
                     
                 pygame.draw.rect(pantalla, color_barra, (x_barra, y_barra, ancho_actual, 8))
         
+        #temporizador
+        minutos = tiempo_restante // 60
+        segundos = tiempo_restante % 60
+        texto_timer = fuente_timer.render(f"{minutos:02}:{segundos:02}",True,(255, 255, 255))
+        pantalla.blit(texto_timer, (1080, 10))
+
+        pygame.display.flip()
+        reloj.tick(60)
+
+def game_over(pantalla, mensaje):
+
+    reloj = pygame.time.Clock()
+
+    fuente_titulo = pygame.font.SysFont(
+        "arial",
+        80,
+        bold=True
+    )
+
+    fuente_mensaje = pygame.font.SysFont(
+        "arial",
+        40
+    )
+
+    fuente_boton = pygame.font.SysFont(
+        "arial",
+        40
+    )
+
+    boton_menu = pygame.Rect(
+        300,     # más a la izquierda
+        520,
+        600,     # más ancho
+        90
+    )
+
+    while True:
+
+        for evento in pygame.event.get():
+
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if evento.type == pygame.MOUSEBUTTONDOWN:
+
+                if boton_menu.collidepoint(evento.pos):
+                    return
+
+        pantalla.fill((20, 20, 20))
+
+        # Título
+        texto = fuente_titulo.render(
+            "GAME OVER",
+            True,
+            (255, 0, 0)
+        )
+
+        rect_texto = texto.get_rect(
+            center=(600, 220)
+        )
+
+        pantalla.blit(texto, rect_texto)
+
+        # Mensaje personalizado
+        texto_mensaje = fuente_mensaje.render(
+            mensaje,
+            True,
+            (255, 255, 255)
+        )
+
+        rect_mensaje = texto_mensaje.get_rect(
+            center=(600, 340)
+        )
+
+        pantalla.blit(
+            texto_mensaje,
+            rect_mensaje
+        )
+
+        # Botón
+        pygame.draw.rect(
+            pantalla,
+            (200, 200, 200),
+            boton_menu,
+            border_radius=10
+        )
+
+        texto_menu = fuente_boton.render(
+            "VOLVER AL MENU PRINCIPAL",
+            True,
+            (0, 0, 0)
+        )
+
+        rect_menu = texto_menu.get_rect(
+            center=boton_menu.center
+        )
+
+        pantalla.blit(
+            texto_menu,
+            rect_menu
+        )
 
         pygame.display.flip()
         reloj.tick(60)

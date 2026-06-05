@@ -48,7 +48,6 @@ while ejecutando:
         if evento.type == pygame.MOUSEBUTTONDOWN:
 
             if boton_jugar.collidepoint(evento.pos):
-                ejecutando = False
                 iniciar_juego()
 
             if boton_salir.collidepoint(evento.pos):
