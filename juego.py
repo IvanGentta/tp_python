@@ -13,11 +13,15 @@ def iniciar_juego():
     precargar_imagenes_carnes()
     fondo = pygame.image.load("img/patio.png").convert()
     carbon = pygame.image.load("img/carbon.png").convert_alpha()
-    parrilla = pygame.image.load("img/parrilla_media.png").convert_alpha()
-    img_quemada = pygame.image.load("img/quemado.png").convert_alpha()
+    fuego_alto = pygame.image.load("img/parrilla_alta.png").convert_alpha()
+    fuego_medio = pygame.image.load("img/parrilla_media.png").convert_alpha()
+    fuego_bajo = pygame.image.load("img/parrilla_baja.png").convert_alpha()
+    img_quemada = pygame.image.load("img/ceniza.png").convert_alpha()
     
     carbon = pygame.transform.scale(carbon, (164, 242))
-    parrilla = pygame.transform.scale(parrilla, (972, 700))
+    fuego_alto = pygame.transform.scale(fuego_alto, (972, 700))
+    fuego_medio = pygame.transform.scale(fuego_medio, (972, 700))
+    fuego_bajo = pygame.transform.scale(fuego_bajo, (972, 700))
     fondo = pygame.transform.scale(fondo,(ANCHO, ALTO))
 
     reloj = pygame.time.Clock()
@@ -64,7 +68,43 @@ def iniciar_juego():
 
     ejecutando = True
 
+    nivel_carbon = 50
+    ultimo_tiempo_carbon = pygame.time.get_ticks()
+
+    carbon_rect = carbon.get_rect(topleft=(1020, 650))
+
     while ejecutando:
+
+        tiempo_actual = pygame.time.get_ticks()
+
+        mouse_pos = pygame.mouse.get_pos()
+        hover_carbon = carbon_rect.collidepoint(mouse_pos)
+
+        if hover_carbon:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+        if tiempo_actual - ultimo_tiempo_carbon >= 1000:
+            nivel_carbon -= 5
+
+            if nivel_carbon < 0:
+                nivel_carbon = 0
+        
+            ultimo_tiempo_carbon = tiempo_actual
+
+        if nivel_carbon > 66:
+            parrilla_actual = fuego_alto
+            color_barra_carbon = (220, 0, 0)
+
+        elif nivel_carbon > 33:
+            parrilla_actual = fuego_medio
+            color_barra_carbon = (255, 140, 0)
+
+        else:
+            parrilla_actual = fuego_bajo
+            color_barra_carbon = (120, 120, 120)
+
         
         # Calculamos el delta time (dt) para manejar el tiempo real de cocción
         dt = reloj.tick(60) / 1000.0    # Tiempo en fracciones de segundo
@@ -96,6 +136,11 @@ def iniciar_juego():
                 sys.exit()
                 
             if evento.type == pygame.MOUSEBUTTONDOWN:
+                if carbon_rect.collidepoint(evento.pos):
+                    nivel_carbon += 5
+                    if nivel_carbon > 100:
+                        nivel_carbon = 100
+
                 for carne in carnes_activas:
                     if carne["rect"].collidepoint(evento.pos):
                         
@@ -134,8 +179,19 @@ def iniciar_juego():
         
         # 1. PRIMERO DIBUJAMOS EL FONDO (La capa más profunda)
         pantalla.blit(fondo, (0, 0))
-        pantalla.blit(carbon, (1020, 650))
-        pantalla.blit(parrilla, (10, 190))
+        pantalla.blit(carbon, carbon_rect)
+
+        if hover_carbon:
+            pygame.draw.rect(pantalla,(255, 255, 0),carbon_rect,4)
+        # Fondo barra carbón
+        pygame.draw.rect(pantalla,(80, 80, 80),(900, 50, 250, 30))
+
+        # Nivel actual
+        pygame.draw.rect(pantalla,color_barra_carbon,(900, 50, nivel_carbon * 2.5, 30))
+
+        # Borde
+        pygame.draw.rect(pantalla,(255, 255, 255),(900, 50, 250, 30),2)
+        pantalla.blit(parrilla_actual, (10, 190))
         
         # Dibujamos visualmente las siluetas fijas de los 4 slots de arriba
         for s in slots_preparacion:

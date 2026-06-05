@@ -10,7 +10,7 @@ DATOS_BASE_CARNES = [
     {"nombre": "Chorizo", "img_cruda_path": "img/chorizo_crudo.png", "img_cocida_path": "img/chorizo_cocido.png", "puntaje_maximo": 90.0},
     {"nombre": "Paty", "img_cruda_path": "img/paty_crudo.png", "img_cocida_path": "img/paty_cocido.png", "puntaje_maximo": 100.0},
     {"nombre": "Pollo", "img_cruda_path": "img/pollo_crudo.png", "img_cocida_path": "img/pollo_cocido.png", "puntaje_maximo": 120.0},
-    {"nombre": "Chuleton de Cerdo", "img_cruda_path": "img/chuleton_cerdo_crudo.png", "img_cocida_path": "img/chuleton_cerdo_crudo.png", "puntaje_maximo": 120.0},
+    {"nombre": "Chuleton de Cerdo", "img_cruda_path": "img/chuleton_cerdo_crudo.png", "img_cocida_path": "img/chuleton_cerdo_cocido.png", "puntaje_maximo": 120.0},
     {"nombre": "Bife de Chorizo", "img_cruda_path": "img/bife_de_chorizo_crudo.png", "img_cocida_path": "img/bife_de_chorizo_cocido.png", "puntaje_maximo": 150.0},
     {"nombre": "Bife Angosto", "img_cruda_path": "img/bife_angosto_crudo.png", "img_cocida_path": "img/bife_angosto_cocido.png", "puntaje_maximo": 110.0}
 ]
