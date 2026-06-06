@@ -1,7 +1,7 @@
 import pygame
 import sys
 import random
-from carnes import crear_carne_aleatoria, actualizar_logica_carnes, voltear_carne, precargar_imagenes_carnes
+from carnes import spawnear_carne, actualizar_logica_carnes, voltear_carne, precarga_imagenes_carnes
 
 def iniciar_juego():
 
@@ -10,7 +10,7 @@ def iniciar_juego():
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
 
     # Precargamos los imagenes una sola vez en la memoria
-    precargar_imagenes_carnes()
+    precarga_imagenes_carnes()
     fondo = pygame.image.load("img/patio.png").convert()
     carbon = pygame.image.load("img/carbon.png").convert_alpha()
     fuego_alto = pygame.image.load("img/parrilla_alta.png").convert_alpha()
@@ -28,39 +28,41 @@ def iniciar_juego():
 
     # --- CONFIGURACIÓN DE LOS SLOTS SUPERIORES ---
     # Guardamos las coordenadas X fijas de cada uno de los 4 slots de preparación
-    slots_preparacion = [
-        {"x": 175, "y": 100, "ocupado": False},
-        {"x": 375, "y": 100, "ocupado": False},
-        {"x": 575, "y": 100, "ocupado": False},
-        {"x": 825, "y": 100, "ocupado": False}
+    slots_spawn = [
+        {"x": 175, "y": 100, "en_uso": False},
+        {"x": 375, "y": 100, "en_uso": False},
+        {"x": 575, "y": 100, "en_uso": False},
+        {"x": 825, "y": 100, "en_uso": False}
     ]
     
     # --- CONFIGURACIÓN DE LA PARRILLA ---
-    puestos_parrilla = [
-        {"x": 175, "y": 750, "ocupado": False},
-        {"x": 375, "y": 750, "ocupado": False},
-        {"x": 575, "y": 750, "ocupado": False},
-        {"x": 825, "y": 750, "ocupado": False},
+    lugar_parrilla = [
         
-        {"x": 175, "y": 550, "ocupado": False},
-        {"x": 375, "y": 550, "ocupado": False},
-        {"x": 575, "y": 550, "ocupado": False},
-        {"x": 825, "y": 550, "ocupado": False},
+        {"x": 375, "y": 550, "en_uso": False},
+        {"x": 575, "y": 550, "en_uso": False},
+        {"x": 175, "y": 550, "en_uso": False},
+        {"x": 825, "y": 550, "en_uso": False},
         
-        {"x": 175, "y": 350, "ocupado": False},
-        {"x": 375, "y": 350, "ocupado": False},
-        {"x": 575, "y": 350, "ocupado": False},
-        {"x": 825, "y": 350, "ocupado": False}
+        
+        {"x": 375, "y": 750, "en_uso": False},
+        {"x": 575, "y": 750, "en_uso": False},
+        {"x": 375, "y": 350, "en_uso": False},
+        {"x": 575, "y": 350, "en_uso": False},
+        
+        {"x": 175, "y": 750, "en_uso": False},
+        {"x": 825, "y": 750, "en_uso": False},
+        {"x": 175, "y": 350, "en_uso": False},
+        {"x": 825, "y": 350, "en_uso": False}
     ]
     
     # Lista dinámica donde se guardarán todas las carnes que están vivas en pantalla
-    carnes_activas = []
+    spawn_de_carnes = []
     
     # Al empezar el juego rellenamos los 4 slots inmediatamente para arrancar con comida
     for i in range(4):
-        nueva_carne = crear_carne_aleatoria(slots_preparacion[i]["x"], slots_preparacion[i]["y"], i)
-        carnes_activas.append(nueva_carne)
-        slots_preparacion[i]["ocupado"] = True
+        nueva_carne = spawnear_carne(slots_spawn[i]["x"], slots_spawn[i]["y"], i)
+        spawn_de_carnes.append(nueva_carne)
+        slots_spawn[i]["en_uso"] = True
 
     # --- TEMPORIZADOR DE GENERACIÓN INFINITA ---
     # Definimos en cuántos segundos se generará el próximo alimento (entre 5.0 y 10.0)
@@ -130,17 +132,17 @@ def iniciar_juego():
         timer_generacion -= dt
         if timer_generacion <= 0:
             # Buscamos qué slots superiores están vacíos actualmente
-            slots_libres = [i for i, s in enumerate(slots_preparacion) if not s["ocupado"]]
+            slots_libres = [i for i, s in enumerate(slots_spawn) if not s["en_uso"]]
             
             # Si hay al menos un slot vacío arriba, generamos una carne
             if slots_libres:
                 slot_elegido_idx = random.choice(slots_libres) # Elegimos un slot vacío al azar
-                slot = slots_preparacion[slot_elegido_idx]
+                slot = slots_spawn[slot_elegido_idx]
                 
                 # Creamos de forma infinita una carne aleatoria y la sumamos al juego
-                nueva_carne = crear_carne_aleatoria(slot["x"], slot["y"], slot_elegido_idx)
-                carnes_activas.append(nueva_carne)
-                slot["ocupado"] = True
+                nueva_carne = spawnear_carne(slot["x"], slot["y"], slot_elegido_idx)
+                spawn_de_carnes.append(nueva_carne)
+                slot["en_uso"] = True
                 print(f"--> ¡Apareció un nuevo {nueva_carne['nombre']} en el slot {slot_elegido_idx + 1}!")
                 
             # Reiniciamos el temporizador con otro tiempo al azar entre 5 y 10 segundos
@@ -159,38 +161,39 @@ def iniciar_juego():
                     if nivel_carbon > 100:
                         nivel_carbon = 100
 
-                for carne in carnes_activas:
+                for carne in spawn_de_carnes:
                     if carne["rect"].collidepoint(evento.pos):
                         
-                        # CASO A: El jugador clickea una carne de ARRIBA para bajarla
+                        # CASO A: El jugador clickea una carne del slot para bajarla a la parrilla.
                         if carne["ubicacion"] == "slots":
-                            # Buscamos lugar libre en la parrilla caliente
-                            for puesto in puestos_parrilla:
-                                if not puesto["ocupado"]:
+                            # Buscamos lugar libre en la parrilla
+                            for lugar in lugar_parrilla:
+                                if not lugar["en_uso"]:
                                     # Movemos visualmente el rect abajo
-                                    carne["rect"].center = (puesto["x"], puesto["y"])
+                                    carne["rect"].center = (lugar["x"], lugar["y"])
                                     carne["ubicacion"] = "parrilla"
-                                    puesto["ocupado"] = True
-                                    
-                                    # CRUCIAL: Liberamos el slot superior donde estaba para que pueda nacer otra carne ahí
+                                    lugar["en_uso"] = True
+                                    # Liberamos el slot de spawn para que pueda aparecer una carne nueva ahí
                                     idx_slot_viejo = carne["slot_origen"]
-                                    slots_preparacion[idx_slot_viejo]["ocupado"] = False
+                                    slots_spawn[idx_slot_viejo]["en_uso"] = False
                                     break
                                     
                         # CASO B: Clickea una carne que ya está ABAJO (Lógica para voltear)
                         elif carne["ubicacion"] == "parrilla":
-                            voltear_carne(carne)
+                            if carne["lado_b"] == False:
+                                if carne["cocinando"] >= carne["coccion_maxima"]*0.35:
+                                    voltear_carne(carne)
                         
-                        #CASO C: Clickea una carne para servir
-                        #elif carne["ubicacion"] == "parrilla":
-                            #servir(carne)
+                            #CASO C: Clickea una carne para servir
+                            #elif carne["lado_b"] == True:
+                                #servir(carne)
                         
                         #CASO D: Clickea una carne quemada para desechar
                         #elif carne["ubicacion"] == "parrilla":
                             #remover(carne)
         
         # --- ACTUALIZACIÓN ---
-        actualizar_logica_carnes(carnes_activas, dt)
+        actualizar_logica_carnes(spawn_de_carnes, dt)
         
         # --- DIBUJO ---
         pantalla.fill((40, 40, 40))
@@ -212,12 +215,12 @@ def iniciar_juego():
         pantalla.blit(parrilla_actual, (10, 190))
         
         # Dibujamos visualmente las siluetas fijas de los 4 slots de arriba
-        for s in slots_preparacion:
+        for s in slots_spawn:
             pygame.draw.rect(pantalla, (60, 60, 60), (s["x"] - 50, s["y"] - 50, 100, 100), 2, border_radius=5)
             
                 
         # Renderizado de las carnes activas en pantalla
-        for carne in carnes_activas:
+        for carne in spawn_de_carnes:
             if carne["estado_crudo"]:
                 pantalla.blit(carne["img_cruda"], carne["rect"])
             elif carne["estado_cocido"]:
@@ -227,9 +230,9 @@ def iniciar_juego():
                 pantalla.blit(img_quemada, carne["rect"])
             
             # Barras de cocción 
-            if carne["ubicacion"] == "parrilla" and carne["puntaje_coccion"] > 0:
+            if carne["ubicacion"] == "parrilla" and carne["cocinando"] > 0:
                 ancho_total_barra = 100
-                ancho_actual = (carne["puntaje_coccion"] / carne["puntaje_maximo"]) * ancho_total_barra
+                ancho_actual = (carne["cocinando"] / carne["coccion_maxima"]) * ancho_total_barra
                 
                 x_barra = carne["rect"].x
                 y_barra = carne["rect"].y - 15
@@ -239,9 +242,9 @@ def iniciar_juego():
                 #Color de coccion buena
                 color_barra = (0, 255, 0)
                 #Color de alerta
-                if carne["puntaje_coccion"] >= (carne["puntaje_maximo"] / 2) and not carne["lado_b"]:
+                if carne["cocinando"] >= (carne["coccion_maxima"] / 2) and not carne["lado_b"]:
                     color_barra = (255, 200, 0)
-                elif carne["puntaje_coccion"] >= (carne["puntaje_maximo"]):
+                elif carne["cocinando"] >= (carne["coccion_maxima"]):
                     color_barra = (255, 200, 0)
                     
                 pygame.draw.rect(pantalla, color_barra, (x_barra, y_barra, ancho_actual, 8))
