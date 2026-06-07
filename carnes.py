@@ -1,9 +1,9 @@
-
 import pygame
+import juego
 import random
 
 # Diccionarios base con la configuración de cada alimento.
-# No les ponemos imágenes ni rectángulos acá para no sobrecargar la memoria al clonarlos.
+
 DATOS_BASE_CARNES = [
     {"nombre": "Chorizo", "img_cruda_path": "img/chorizo_crudo.png", "img_cocida_path": "img/chorizo_cocido.png", "coccion_maxima": 90.0},
     {"nombre": "Paty", "img_cruda_path": "img/paty_crudo.png", "img_cocida_path": "img/paty_cocido.png", "coccion_maxima": 100.0},
@@ -25,76 +25,92 @@ def spawnear_carne(x_slot, y_slot, indice_slot):
     
     # Elegimos un tipo de carne al azar de la lista
     base = random.choice(DATOS_BASE_CARNES)
-    
-    # Creamos la nueva carne reciclando las imágenes ya cargadas en 'base'
+
     nueva_carne = {
         "nombre": base["nombre"],
-        "img_cruda": base["img_cruda"],   # <- Referencia a la imagen maestra en RAM
-        "img_cocida": base["img_cocida"], # <- Referencia a la imagen maestra en RAM
+        "img_cruda": base["img_cruda"],
+        "img_cocida": base["img_cocida"], 
         "coccion_maxima": base["coccion_maxima"],
         "cocinando": 0.0, 
         "estado_crudo": True,
         "estado_cocido": False,
+        "estado_quemado": False,
         "lado_b": False,
+        "servido": False,
         "tiempo_sin_voltear": 0.0,
         "ubicacion": "slots",
+        "mi_lugar" : "ninguno",
         "slot_origen": indice_slot,
         "puntaje" : base["coccion_maxima"],
-        "resultado" : 0.0
-    }
-     # debemos agregar-> servido(bool); resultado(float);
-	# debo pulir la logica de estado_crudo, estado_cocido, quemado.
-    
+    }  
 
-    
     # Creamos su rectángulo físico centrado en el slot asignado
     nueva_carne["rect"] = nueva_carne["img_cruda"].get_rect(center=(x_slot, y_slot))
     
     return nueva_carne
 
 
-def actualizar_logica_carnes(lista_carnes, dt):
+def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon):
     """Controla la cocción de las carnes que están en la parrilla"""
-    for carne in lista_carnes:
+    for carne in spawn_de_carnes:
         if carne["ubicacion"] == "slots":
             continue # Si está arriba esperando, no pasa nada
         
-        # NUEVO: Ignorar si la carne ya está quemada
-        if not carne["estado_crudo"] and not carne["estado_cocido"]:
-            continue
-        
-        if carne["cocinando"] < carne["coccion_maxima"]:
-            carne["cocinando"] += 15 * dt  
-            mitad = carne["coccion_maxima"] / 2
-            
-            if carne["cocinando"] >= mitad and not carne["lado_b"]:
-                carne["tiempo_sin_voltear"] += dt
-                if carne["tiempo_sin_voltear"] > 2.0:
-                    carne["cocinando"] -= 8 * dt  
-                if carne["tiempo_sin_voltear"] >= 5.0:
-                    quemar_alimento(carne)
+        if carne["cocinando"] < carne["coccion_maxima"]*1.2:
+            #aqui agergaria distintos valores para fuego alto/mediano/bajo.
+            if nivel_carbon > 75:
+                carne["cocinando"] += 25 * dt  #se multiplica por dt para sumar 15 puntos por cada segundo real (si no estuviera *dt , se agregaria por fotograma)
+            elif nivel_carbon > 55:		
+                carne["cocinando"] += 15 * dt
+            elif nivel_carbon < 55:
+                carne["cocinando"] += 10 * dt
+   
+            if carne["cocinando"] >= (carne["coccion_maxima"] *0.8) and not carne["lado_b"]:
+                    chamuscar(carne, jugador)
                     
-        if carne["cocinando"] >= (carne["coccion_maxima"]+2):
-            quemar_alimento(carne)
+        else:
+            chamuscar(carne, jugador)
 
-def voltear_carne(carne):
+def voltear_carne(carne, jugador):
     if not carne["lado_b"]:
         if carne["tiempo_sin_voltear"] <= 0.0 :
             carne["lado_b"] = True  #se dio vuelta
             carne["estado_crudo"] = False
             carne["estado_cocido"] = True
-            carne["puntaje"]-= carne["coccion_maxima"] * 0.2
+            carne["puntaje"] -= carne["coccion_maxima"] *10 * 0.2
             print(f"¡Volteaste el {carne['nombre']}!")
+        
+        else:
+            for i in range(1,5):
+                if carne["tiempo_sin_voltear"] <= i:
+                    carne["lado_b"] = True  #se dio vuelta
+                    carne["estado_crudo"] = False
+                    carne["estado_cocido"] = True
+                    carne["puntaje"] -= carne["coccion_maxima"] *10 * (i*0.1)
+                    print(f"¡Volteaste el {carne['nombre']}!") 
+                    break
+            
 
-def quemar_alimento(carne):
-    carne["cocinando"] = 0.0
+def chamuscar(carne, jugador):
+    carne["cocinando"] = 0
     carne["estado_crudo"] = False
     carne["estado_cocido"] = False
+    carne["estado_quemado"] = True
     carne["puntaje"]= 0.0
-    print(f"¡El {carne['nombre']} se quemó por completo!")
+    jugador["resultado"] -= carne["coccion_maxima"] *10 * 0.5 #se le resta al jugador la mitad de los puntos maximos de esta carne.
     
-#def servir(carne): 
-    #Debe guardar los puntos del jugador
+def servir(carne, jugador, spawn_de_carnes):
+    #si sirve la carne entre el 90% y 110% está ok y recibe todos los puntos.
+    if carne["cocinando"] >= carne["coccion_maxima"] *0.9 and carne["cocinando"] < carne["coccion_maxima"] *1.1:
+        jugador["resultado"] += carne["coccion_maxima"]*10
+        remover(carne, spawn_de_carnes)
+        
+    #si sirve la carne por deajo del 90% o por encima del 110% recibe tres cuartas partes de los puntos.
+    elif carne["cocinando"] < carne["coccion_maxima"] *0.9 or carne["cocinando"] > carne["coccion_maxima"] * 1.1 :
+        jugador["resultado"] += carne["coccion_maxima"] *10 * 0.75
+        remover(carne, spawn_de_carnes)
 
-#def remover(carne):
-    #debe remover la carne quemada
+def remover(carne, spawn_de_carnes):
+    if "mi_lugar_parrilla" in carne:
+        carne["mi_lugar_parrilla"]["en_uso"] = False
+    spawn_de_carnes.remove(carne)

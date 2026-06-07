@@ -32,9 +32,10 @@ fondo_menu = pygame.transform.scale(
 # Botones Parámetros: (pos_x, pos_y, ancho, alto)
 boton_jugar = pygame.Rect(430, 200, 350, 90)
 boton_instrucciones = pygame.Rect(430, 350, 350, 90)
-boton_salir = pygame.Rect(430, 500, 350, 90)
+boton_hs = pygame.Rect(430, 500, 350, 90)
+boton_salir = pygame.Rect(430, 650, 350, 90)
 
-# Variable que controla el bucle principal
+
 # Mientras sea True el programa sigue abierto
 ejecutando = True
 
@@ -131,6 +132,29 @@ while ejecutando:
         rect_texto_instrucciones
     )
 
+    # Botón High Scores
+    pygame.draw.rect(
+        pantalla,
+        (200, 200, 200),
+        boton_hs,
+        border_radius=10
+    )
+
+    texto_hs = fuente_boton.render(
+        "HIGH SCORES",
+        True,
+        (0, 0, 0)
+    )
+
+    rect_texto_hs = texto_hs.get_rect(
+        center=boton_hs.center
+    )
+
+    pantalla.blit(
+        texto_hs,
+        rect_texto_hs
+    )
+    
     # Botón salir
     pygame.draw.rect(
         pantalla,

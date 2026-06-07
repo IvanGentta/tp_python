@@ -1,7 +1,7 @@
 import pygame
 import sys
 import random
-from carnes import spawnear_carne, actualizar_logica_carnes, voltear_carne, precarga_imagenes_carnes
+from carnes import precarga_imagenes_carnes, spawnear_carne, actualizar_logica_carnes, voltear_carne, chamuscar, servir, remover
 
 def iniciar_juego():
 
@@ -23,7 +23,10 @@ def iniciar_juego():
     fuego_medio = pygame.transform.scale(fuego_medio, (972, 700))
     fuego_bajo = pygame.transform.scale(fuego_bajo, (972, 700))
     fondo = pygame.transform.scale(fondo,(ANCHO, ALTO))
-
+	
+	# Lista dinamica de jugador donde se guardan los puntos:
+    jugador = {"nombre": "", "resultado": 0.0}
+	
     reloj = pygame.time.Clock()
 
     # --- CONFIGURACIÓN DE LOS SLOTS SUPERIORES ---
@@ -36,13 +39,11 @@ def iniciar_juego():
     ]
     
     # --- CONFIGURACIÓN DE LA PARRILLA ---
-    lugar_parrilla = [
-        
+    lugares_parrilla = [
         {"x": 375, "y": 550, "en_uso": False},
         {"x": 575, "y": 550, "en_uso": False},
         {"x": 175, "y": 550, "en_uso": False},
         {"x": 825, "y": 550, "en_uso": False},
-        
         
         {"x": 375, "y": 750, "en_uso": False},
         {"x": 575, "y": 750, "en_uso": False},
@@ -57,9 +58,9 @@ def iniciar_juego():
     
     # Lista dinámica donde se guardarán todas las carnes que están vivas en pantalla
     spawn_de_carnes = []
-    
-    # Al empezar el juego rellenamos los 4 slots inmediatamente para arrancar con comida
-    for i in range(4):
+
+    # Al empezar el juego rellenamos los 3 slots inmediatamente para arrancar con comida
+    for i in range(3):
         nueva_carne = spawnear_carne(slots_spawn[i]["x"], slots_spawn[i]["y"], i)
         spawn_de_carnes.append(nueva_carne)
         slots_spawn[i]["en_uso"] = True
@@ -100,11 +101,17 @@ def iniciar_juego():
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-        #reduccion constante de nivel carbon
+        # Reducción exponencial del nivel de carbón
         if tiempo_actual - ultimo_tiempo_carbon >= 1000:
-            nivel_carbon -= 5
-
-            if nivel_carbon < 0:
+            # Usamos una constante (ej. 200). A menor nivel_carbon, mayor es el resultado de la división.
+            # IMPORTANTE: Sumamos + 1 al divisor para evitar que yo lance un error fatal de "ZeroDivisionError"
+            puntos_a_restar = 600 / (nivel_carbon + 1)
+            
+            # Restamos esos puntos al total
+            nivel_carbon -= puntos_a_restar
+            
+            # Límite inferior de seguridad
+            if nivel_carbon < 1:
                 nivel_carbon = 0
                 game_over(pantalla,"¡Que mal! Se te apago el fuego :(")
                 return
@@ -112,11 +119,11 @@ def iniciar_juego():
             ultimo_tiempo_carbon = tiempo_actual
 
         #cambios parrilla segun carbon
-        if nivel_carbon > 66:
+        if nivel_carbon > 75:
             parrilla_actual = fuego_alto
             color_barra_carbon = (220, 0, 0)
 
-        elif nivel_carbon > 33:
+        elif nivel_carbon > 55:
             parrilla_actual = fuego_medio
             color_barra_carbon = (255, 140, 0)
 
@@ -145,8 +152,8 @@ def iniciar_juego():
                 slot["en_uso"] = True
                 print(f"--> ¡Apareció un nuevo {nueva_carne['nombre']} en el slot {slot_elegido_idx + 1}!")
                 
-            # Reiniciamos el temporizador con otro tiempo al azar entre 5 y 10 segundos
-            timer_generacion = random.uniform(2.5, 6.5)
+            # Reiniciamos el temporizador para generar una nueva carne dentro de 1.25 y 3.5 segundos
+            timer_generacion = random.uniform(1.25, 3.5)
         
         # --- DETECCIÓN DE EVENTOS DE CLIC ---
         for evento in pygame.event.get():
@@ -157,7 +164,7 @@ def iniciar_juego():
             #agregar mas carbon
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if carbon_rect.collidepoint(evento.pos):
-                    nivel_carbon += 5
+                    nivel_carbon += 10
                     if nivel_carbon > 100:
                         nivel_carbon = 100
 
@@ -166,34 +173,41 @@ def iniciar_juego():
                         
                         # CASO A: El jugador clickea una carne del slot para bajarla a la parrilla.
                         if carne["ubicacion"] == "slots":
-                            # Buscamos lugar libre en la parrilla
-                            for lugar in lugar_parrilla:
-                                if not lugar["en_uso"]:
+                            # Buscamos un lugar libre en la parrilla
+                            for lugar_parrilla in lugares_parrilla:
+                                if not lugar_parrilla["en_uso"]:
                                     # Movemos visualmente el rect abajo
-                                    carne["rect"].center = (lugar["x"], lugar["y"])
+                                    carne["rect"].center = (lugar_parrilla["x"], lugar_parrilla["y"])
                                     carne["ubicacion"] = "parrilla"
-                                    lugar["en_uso"] = True
+                                    lugar_parrilla["en_uso"] = True
+                                    carne["mi_lugar"] = lugar_parrilla
                                     # Liberamos el slot de spawn para que pueda aparecer una carne nueva ahí
                                     idx_slot_viejo = carne["slot_origen"]
                                     slots_spawn[idx_slot_viejo]["en_uso"] = False
                                     break
                                     
-                        # CASO B: Clickea una carne que ya está ABAJO (Lógica para voltear)
+                        # Click a una carne que esta en la parrilla:
                         elif carne["ubicacion"] == "parrilla":
-                            if carne["lado_b"] == False:
-                                if carne["cocinando"] >= carne["coccion_maxima"]*0.35:
-                                    voltear_carne(carne)
-                        
-                            #CASO C: Clickea una carne para servir
-                            #elif carne["lado_b"] == True:
-                                #servir(carne)
-                        
-                        #CASO D: Clickea una carne quemada para desechar
-                        #elif carne["ubicacion"] == "parrilla":
-                            #remover(carne)
+                            
+                            if carne["estado_quemado"] == False:
+                                # CASO B: Voltear carne
+                                if carne["lado_b"] == False:
+                                    if carne["cocinando"] >= carne["coccion_maxima"]*0.4:
+                                        voltear_carne(carne, jugador)
+                                    else:
+                                        jugador["resultado"] -= carne["coccion_maxima"]*10 *0.1
+                                #CASO C: Servir
+                                elif carne["lado_b"] == True:
+                                    if carne["cocinando"] >= carne["coccion_maxima"]*0.8:
+                                        servir(carne, jugador, spawn_de_carnes)
+                                    else:
+                                        jugador["resultado"] -= carne["coccion_maxima"] * 10 * 0.1
+                            #CASO D: Clickea una carne quemada para desechar
+                            elif carne["estado_quemado"] == True:
+                                remover(carne, spawn_de_carnes)
         
         # --- ACTUALIZACIÓN ---
-        actualizar_logica_carnes(spawn_de_carnes, dt)
+        actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon)
         
         # --- DIBUJO ---
         pantalla.fill((40, 40, 40))
@@ -238,16 +252,19 @@ def iniciar_juego():
                 y_barra = carne["rect"].y - 15
                 
                 # Color de fondo de barra
-                pygame.draw.rect(pantalla, (128, 0, 0), (x_barra, y_barra, ancho_total_barra, 8))
-                #Color de coccion buena
-                color_barra = (0, 255, 0)
-                #Color de alerta
-                if carne["cocinando"] >= (carne["coccion_maxima"] / 2) and not carne["lado_b"]:
-                    color_barra = (255, 200, 0)
-                elif carne["cocinando"] >= (carne["coccion_maxima"]):
-                    color_barra = (255, 200, 0)
+                if carne["estado_quemado"] == False:
+                    pygame.draw.rect(pantalla, (128, 0, 0), (x_barra, y_barra, ancho_total_barra, 8))
                     
-                pygame.draw.rect(pantalla, color_barra, (x_barra, y_barra, ancho_actual, 8))
+                    color_barra = (0, 255, 0) #verde, coccion bien
+                    #Colores de alerta:
+                    if carne["cocinando"] >= (carne["coccion_maxima"] *0.5 ) and not carne["lado_b"]:
+                        if carne["cocinando"] >= (carne["coccion_maxima"] *0.7 ) and not carne["lado_b"]:
+                            color_barra = (255, 0, 0)  #rojo "a punto de chamuscarse"
+                        else:
+                            color_barra = (255, 200, 0) #amarillo "apresurate"
+                    elif carne["cocinando"] >= (carne["coccion_maxima"]):
+                        color_barra = (255, 0, 0) #rojo, "cocinado y a punto de chamuscarse"
+                    pygame.draw.rect(pantalla, color_barra, (x_barra, y_barra, ancho_actual, 8))
         
         #temporizador
         minutos = tiempo_restante // 60
@@ -258,7 +275,7 @@ def iniciar_juego():
         pygame.display.flip()
         reloj.tick(60)
 
-def game_over(pantalla, mensaje):
+def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
 
     reloj = pygame.time.Clock()
 
