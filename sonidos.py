@@ -14,6 +14,8 @@ ARCHIVOS = {
     "carne_quemada":  "carne_quemada",
     "carbon":         "carbon",
     "ambiente_juego": "ambiente_juego",
+    "ladrido": "ladrido",
+    "risa": "risa"
 }
 
 MUSICAS = {

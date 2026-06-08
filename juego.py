@@ -88,6 +88,26 @@ def iniciar_juego():
     
     #puntaje
     fuente_puntaje = pygame.font.SysFont("arial", 35, bold=True)
+
+    #perro
+    perro_activo = False
+    clicks_perro = 0
+    inicio_perro = 0
+
+    imagen_perro = pygame.image.load(
+        "img/perro.png"
+    ).convert_alpha()
+
+    imagen_perro = pygame.transform.scale(
+        imagen_perro,
+        (200, 200)
+    )
+
+    perro_rect = imagen_perro.get_rect(
+        center=(600, 700)
+    )
+
+    timer_perro = random.uniform(5, 10)
     
     while ejecutando:
 
@@ -143,7 +163,23 @@ def iniciar_juego():
         
         # Calculamos el delta time (dt) para manejar el tiempo real de cocción
         dt = reloj.tick(60) / 1000.0    # Tiempo en fracciones de segundo
+
+        #Evento aleatorio del perro
+        timer_perro -= dt
+
+        if timer_perro <= 0 and not perro_activo:
         
+            perro_activo = True
+            clicks_perro = 0
+            inicio_perro = pygame.time.get_ticks()
+            perro_rect.center = (
+            random.randint(150, 1050),
+            random.randint(200, 750)
+            )
+            sonidos.reproducir("ladrido")
+
+            timer_perro = random.uniform(5, 10)
+    
         
         # GENERACIÓN AUTOMÁTICA DE CARNES
         timer_generacion -= dt
@@ -171,8 +207,17 @@ def iniciar_juego():
                 pygame.quit()
                 sys.exit()
             
-            #agregar mas carbon
             if evento.type == pygame.MOUSEBUTTONDOWN:
+                    # Clicks al perro
+                if perro_activo and perro_rect.collidepoint(evento.pos):
+                
+                    clicks_perro += 1
+
+                    if clicks_perro >= 10:
+                        perro_activo = False
+
+                    continue
+            #agregar mas carbon
                 if carbon_rect.collidepoint(evento.pos):
                     nivel_carbon += 10
                     if nivel_carbon > 100:
@@ -219,6 +264,34 @@ def iniciar_juego():
                             #CASO D: Clickea una carne quemada para desechar
                             elif carne["estado_quemado"] == True:
                                 remover(carne, spawn_de_carnes, jugador)
+            
+            if perro_activo:
+                tiempo_perro = (pygame.time.get_ticks() - inicio_perro) / 1000
+                if tiempo_perro >= 3:
+
+                    carnes_en_parrilla = [
+                        carne
+                        for carne in spawn_de_carnes
+                        if carne["ubicacion"] == "parrilla"
+                    ]
+
+                    if carnes_en_parrilla:
+                    
+                        carne_robada = random.choice(
+                            carnes_en_parrilla
+                        )
+
+                        remover(
+                            carne_robada,
+                            spawn_de_carnes,
+                            jugador
+                        )
+
+                        sonidos.reproducir("risa")
+
+                        jugador["resultado"] -= 1000
+
+                    perro_activo = False
         
         # --- ACTUALIZACIÓN ---
         actualizar_logica_carnes(spawn_de_carnes, dt, nivel_carbon)
@@ -289,6 +362,28 @@ def iniciar_juego():
         #puntaje
         texto_puntaje = fuente_puntaje.render(f"Puntos: {int(jugador['resultado'])}",True,(255, 255, 255))
         pantalla.blit(texto_puntaje, (955, 100))
+
+        # perrrrrooooo
+        if perro_activo:
+        
+            pantalla.blit(
+                imagen_perro,
+                perro_rect
+            )
+
+            texto_clicks = fuente_puntaje.render(
+                f"FUIRA PERRO! {10 - clicks_perro}",
+                True,
+                (255, 255, 255)
+            )
+
+            pantalla.blit(
+                texto_clicks,
+                (
+                    perro_rect.centerx - 10,
+                    perro_rect.y - 35
+                )
+            )
         
         pygame.display.flip()
         reloj.tick(60)
