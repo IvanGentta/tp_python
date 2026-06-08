@@ -82,7 +82,7 @@ def iniciar_juego():
     carbon_rect = carbon.get_rect(topleft=(1020, 650))
 
     #temporizador de partida
-    TIEMPO_PARTIDA = 30
+    TIEMPO_PARTIDA = 60
     inicio_partida = pygame.time.get_ticks()
     fuente_timer = pygame.font.SysFont("arial", 40, bold=True)
     
