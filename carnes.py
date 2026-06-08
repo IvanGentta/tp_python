@@ -1,7 +1,7 @@
 import pygame
 import juego
-import random
 import sonidos
+import random
 
 # Diccionarios base con la configuración de cada alimento.
 
@@ -38,11 +38,10 @@ def spawnear_carne(x_slot, y_slot, indice_slot):
         "estado_quemado": False,
         "lado_b": False,
         "servido": False,
-        "tiempo_sin_voltear": 0.0,
         "ubicacion": "slots",
         "mi_lugar" : "ninguno",
         "slot_origen": indice_slot,
-        "puntaje" : base["coccion_maxima"],
+        "puntaje" : 0.0
     }  
 
     # Creamos su rectángulo físico centrado en el slot asignado
@@ -51,7 +50,7 @@ def spawnear_carne(x_slot, y_slot, indice_slot):
     return nueva_carne
 
 
-def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon):
+def actualizar_logica_carnes(spawn_de_carnes, dt, nivel_carbon):
     """Controla la cocción de las carnes que están en la parrilla"""
     for carne in spawn_de_carnes:
         if carne["ubicacion"] == "slots":
@@ -63,56 +62,63 @@ def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon):
                 carne["cocinando"] += 25 * dt  #se multiplica por dt para sumar 15 puntos por cada segundo real (si no estuviera *dt , se agregaria por fotograma)
             elif nivel_carbon > 55:		
                 carne["cocinando"] += 15 * dt
-            elif nivel_carbon < 55:
+            else:
                 carne["cocinando"] += 10 * dt
-   
-            if carne["cocinando"] >= (carne["coccion_maxima"] *0.8) and not carne["lado_b"]:
-                    chamuscar(carne, jugador)
-                    
+                
+            if carne["cocinando"] >= (carne["coccion_maxima"] *0.65) and not carne["lado_b"]:
+                    chamuscar(carne)
         else:
-            chamuscar(carne, jugador)
+            chamuscar(carne)
 
 def voltear_carne(carne, jugador):
-    if not carne["lado_b"]:
-        if carne["tiempo_sin_voltear"] <= 0.0 :
-            carne["lado_b"] = True  #se dio vuelta
-            carne["estado_crudo"] = False
-            carne["estado_cocido"] = True
-            carne["puntaje"] -= carne["coccion_maxima"] *10 * 0.2
-            print(f"¡Volteaste el {carne['nombre']}!")
+        #vuelta en tiempos correctos
+    if carne["cocinando"] >= carne["coccion_maxima"]*0.45 and carne["cocinando"] <= carne["coccion_maxima"] *0.55 :
+        carne["lado_b"] = True  #se dio vuelta
+        carne["estado_crudo"] = False
+        carne["estado_cocido"] = True
+        jugador["resultado"] += carne["coccion_maxima"] *10 * 0.25
         
-        else:
-            for i in range(1,5):
-                if carne["tiempo_sin_voltear"] <= i:
-                    carne["lado_b"] = True  #se dio vuelta
-                    carne["estado_crudo"] = False
-                    carne["estado_cocido"] = True
-                    carne["puntaje"] -= carne["coccion_maxima"] *10 * (i*0.1)
-                    print(f"¡Volteaste el {carne['nombre']}!") 
-                    break
+        #vuelta muy temprana o muy tarde (cerca de chamuscarse)
+    elif carne["cocinando"] < carne["coccion_maxima"]*0.4 or carne["cocinando"] > carne["coccion_maxima"]*0.6:
+        carne["lado_b"] = True  #se dio vuelta
+        carne["estado_crudo"] = False
+        carne["estado_cocido"] = True
+        jugador["resultado"] += carne["coccion_maxima"] *10 * 0.1
+        
+        #vuelta un poco antes o un poco despues del tiempo correcto
+    else:
+        carne["lado_b"] = True  #se dio vuelta
+        carne["estado_crudo"] = False
+        carne["estado_cocido"] = True
+        jugador["resultado"] += carne["coccion_maxima"] *10 * 0.15
             
 
-def chamuscar(carne, jugador):
+def chamuscar(carne):
     carne["cocinando"] = 0
     carne["estado_crudo"] = False
     carne["estado_cocido"] = False
     carne["estado_quemado"] = True
-    carne["puntaje"]= 0.0
-    jugador["resultado"] -= carne["coccion_maxima"] *10 * 0.5 #se le resta al jugador la mitad de los puntos maximos de esta carne.
+    carne["puntaje"] = 0.0
     sonidos.reproducir("carne_quemada")
     
-def servir(carne, jugador, spawn_de_carnes):
+def servir(carne, spawn_de_carnes, jugador):
     #si sirve la carne entre el 90% y 110% está ok y recibe todos los puntos.
     if carne["cocinando"] >= carne["coccion_maxima"] *0.9 and carne["cocinando"] < carne["coccion_maxima"] *1.1:
         jugador["resultado"] += carne["coccion_maxima"]*10
-        remover(carne, spawn_de_carnes)
+        remover(carne, spawn_de_carnes, jugador)
         
     #si sirve la carne por deajo del 90% o por encima del 110% recibe tres cuartas partes de los puntos.
     elif carne["cocinando"] < carne["coccion_maxima"] *0.9 or carne["cocinando"] > carne["coccion_maxima"] * 1.1 :
         jugador["resultado"] += carne["coccion_maxima"] *10 * 0.75
-        remover(carne, spawn_de_carnes)
+        remover(carne, spawn_de_carnes, jugador)
 
-def remover(carne, spawn_de_carnes):
-    if "mi_lugar_parrilla" in carne:
-        carne["mi_lugar_parrilla"]["en_uso"] = False
+
+def remover(carne, spawn_de_carnes, jugador):
+    jugador["resultado"] += carne["puntaje"]
+    if "mi_lugar" in carne and carne["mi_lugar"] != "ninguno":
+        carne["mi_lugar"]["en_uso"] = False
     spawn_de_carnes.remove(carne)
+    
+    """if "mi_lugar_parrilla" in carne:
+        carne["mi_lugar_parrilla"]["en_uso"] = False
+    spawn_de_carnes.remove(carne)"""

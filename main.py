@@ -3,6 +3,7 @@ import sys
 from juego import iniciar_juego
 import sonidos
 
+
 # Inicializa todos los módulos de pygame
 pygame.init()
 
@@ -29,7 +30,6 @@ fondo_menu = pygame.transform.scale(
     fondo_menu,
     (ANCHO, ALTO)
 )
-
 sonidos.inicializar()
 sonidos.reproducir_musica("menu")
 
@@ -55,7 +55,7 @@ while ejecutando:
             if boton_jugar.collidepoint(evento.pos):
                 iniciar_juego()
                 sonidos.reproducir_musica("menu")
-
+                
             if boton_salir.collidepoint(evento.pos):
                 ejecutando = False
 

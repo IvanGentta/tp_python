@@ -6,7 +6,6 @@ from carnes import precarga_imagenes_carnes, spawnear_carne, actualizar_logica_c
 
 def iniciar_juego():
     pygame.font.init()
-
     ANCHO = 1200
     ALTO = 900
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
@@ -72,21 +71,24 @@ def iniciar_juego():
         slots_spawn[i]["en_uso"] = True
 
     # --- TEMPORIZADOR DE GENERACIÓN INFINITA ---
-    # Definimos en cuántos segundos se generará el próximo alimento (entre 5.0 y 10.0)
-    timer_generacion = random.uniform(2.5, 6.5)
+    # Definimos en cuántos segundos
+    timer_generacion =1.5
 
     ejecutando = True
 
     #logica inicial carbon
-    nivel_carbon = 50
+    nivel_carbon = 80
     ultimo_tiempo_carbon = pygame.time.get_ticks()
     carbon_rect = carbon.get_rect(topleft=(1020, 650))
 
     #temporizador de partida
-    TIEMPO_PARTIDA = 180
+    TIEMPO_PARTIDA = 30
     inicio_partida = pygame.time.get_ticks()
     fuente_timer = pygame.font.SysFont("arial", 40, bold=True)
-
+    
+    #puntaje
+    fuente_puntaje = pygame.font.SysFont("arial", 35, bold=True)
+    
     while ejecutando:
 
         #temporizador
@@ -94,7 +96,7 @@ def iniciar_juego():
         tiempo_restante = TIEMPO_PARTIDA - tiempo_transcurrido
         if tiempo_restante <= 0:
             tiempo_restante = 0
-            game_over(pantalla,"¡Se termino el tiempo!")
+            game_over(pantalla,"¡Se termino el tiempo!", jugador["resultado"])
             return
 
         #funcionalidad del carbon 
@@ -113,13 +115,14 @@ def iniciar_juego():
             # IMPORTANTE: Sumamos + 1 al divisor para evitar que yo lance un error fatal de "ZeroDivisionError"
             puntos_a_restar = 600 / (nivel_carbon + 1)
             
-            # Restamos esos puntos al total
+            # Restamos esos puntos al total 
             nivel_carbon -= puntos_a_restar
             
             # Límite inferior de seguridad
             if nivel_carbon < 1:
                 nivel_carbon = 0
-                game_over(pantalla,"¡Que mal! Se te apago el fuego :(")
+                game_over(pantalla,"¡Que mal! Se te apago el fuego :(", jugador["resultado"])
+                print(f"Obtubiste {jugador["resultado"]} puntos.")
                 return
         
             ultimo_tiempo_carbon = tiempo_actual
@@ -141,7 +144,8 @@ def iniciar_juego():
         # Calculamos el delta time (dt) para manejar el tiempo real de cocción
         dt = reloj.tick(60) / 1000.0    # Tiempo en fracciones de segundo
         
-        # --- LÓGICA DE GENERACIÓN AUTOMÁTICA DE CARNES ---
+        
+        # GENERACIÓN AUTOMÁTICA DE CARNES
         timer_generacion -= dt
         if timer_generacion <= 0:
             # Buscamos qué slots superiores están vacíos actualmente
@@ -156,12 +160,12 @@ def iniciar_juego():
                 nueva_carne = spawnear_carne(slot["x"], slot["y"], slot_elegido_idx)
                 spawn_de_carnes.append(nueva_carne)
                 slot["en_uso"] = True
-                print(f"--> ¡Apareció un nuevo {nueva_carne['nombre']} en el slot {slot_elegido_idx + 1}!")
                 
-            # Reiniciamos el temporizador para generar una nueva carne dentro de 1.25 y 3.5 segundos
-            timer_generacion = random.uniform(1.25, 3.5)
+            timer_generacion =1.5
+                
         
-        # --- DETECCIÓN DE EVENTOS DE CLIC ---
+        
+        # DETECCIÓN DE EVENTOS DE CLICK
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 pygame.quit()
@@ -200,24 +204,24 @@ def iniciar_juego():
                             if carne["estado_quemado"] == False:
                                 # CASO B: Voltear carne
                                 if carne["lado_b"] == False:
-                                    if carne["cocinando"] >= carne["coccion_maxima"]*0.4:
+                                    if carne["cocinando"] >= carne["coccion_maxima"]*0.35:
                                         voltear_carne(carne, jugador)
                                         sonidos.reproducir("carne_puesta")
                                     else:
                                         jugador["resultado"] -= carne["coccion_maxima"]*10 *0.1
                                 #CASO C: Servir
                                 elif carne["lado_b"] == True:
-                                    if carne["cocinando"] >= carne["coccion_maxima"]*0.8:
-                                        servir(carne, jugador, spawn_de_carnes)
+                                    if carne["cocinando"] >= carne["coccion_maxima"]*0.85:
+                                        servir(carne, spawn_de_carnes, jugador)
                                         sonidos.reproducir("carne_punto")
                                     else:
-                                        jugador["resultado"] -= carne["coccion_maxima"] * 10 * 0.1
+                                        carne["puntaje"] -= carne["coccion_maxima"] * 10 * 0.1
                             #CASO D: Clickea una carne quemada para desechar
                             elif carne["estado_quemado"] == True:
-                                remover(carne, spawn_de_carnes)
+                                remover(carne, spawn_de_carnes, jugador)
         
         # --- ACTUALIZACIÓN ---
-        actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon)
+        actualizar_logica_carnes(spawn_de_carnes, dt, nivel_carbon)
         
         # --- DIBUJO ---
         pantalla.fill((40, 40, 40))
@@ -282,10 +286,14 @@ def iniciar_juego():
         texto_timer = fuente_timer.render(f"{minutos:02}:{segundos:02}",True,(255, 255, 255))
         pantalla.blit(texto_timer, (1080, 10))
 
+        #puntaje
+        texto_puntaje = fuente_puntaje.render(f"Puntos: {int(jugador['resultado'])}",True,(255, 255, 255))
+        pantalla.blit(texto_puntaje, (955, 100))
+        
         pygame.display.flip()
         reloj.tick(60)
 
-def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
+def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenidos
 
     reloj = pygame.time.Clock()
 
@@ -359,6 +367,21 @@ def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
             rect_mensaje
         )
 
+        texto_puntos = fuente_mensaje.render(
+        f"Puntaje final: {int(puntaje)}",
+        True,
+        (255, 255, 0)
+        )
+
+        rect_puntos = texto_puntos.get_rect(
+        center=(600, 400)
+        )
+
+        pantalla.blit(
+        texto_puntos,
+        rect_puntos
+        )
+        
         # Botón
         pygame.draw.rect(
             pantalla,
