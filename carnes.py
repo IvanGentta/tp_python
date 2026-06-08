@@ -1,6 +1,7 @@
 import pygame
 import juego
 import random
+import sonidos
 
 # Diccionarios base con la configuración de cada alimento.
 
@@ -50,7 +51,7 @@ def spawnear_carne(x_slot, y_slot, indice_slot):
     return nueva_carne
 
 
-def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon, sonidos):
+def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon):
     """Controla la cocción de las carnes que están en la parrilla"""
     for carne in spawn_de_carnes:
         if carne["ubicacion"] == "slots":
@@ -66,10 +67,10 @@ def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon, sonidos
                 carne["cocinando"] += 10 * dt
    
             if carne["cocinando"] >= (carne["coccion_maxima"] *0.8) and not carne["lado_b"]:
-                    chamuscar(carne, jugador, sonidos)
+                    chamuscar(carne, jugador)
                     
         else:
-            chamuscar(carne, jugador, sonidos)
+            chamuscar(carne, jugador)
 
 def voltear_carne(carne, jugador):
     if not carne["lado_b"]:
@@ -91,7 +92,7 @@ def voltear_carne(carne, jugador):
                     break
             
 
-def chamuscar(carne, jugador, sonidos):
+def chamuscar(carne, jugador):
     carne["cocinando"] = 0
     carne["estado_crudo"] = False
     carne["estado_cocido"] = False

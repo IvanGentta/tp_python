@@ -1,214 +1,176 @@
 import pygame
 import os
 
-class GestorSonidos:
-    """
-    Gestiona todos los sonidos del juego Maestro Parrillero.
-    
-    Uso básico:
-        sonidos = GestorSonidos()
-        sonidos.reproducir("carne_puesta")
-        sonidos.reproducir_musica("menu")
-    
-    Carpeta esperada de archivos:
-        sounds/
-            carne_puesta.wav
-            carne_punto.wav
-            carne_quemada.wav
-            carbon.wav
-            musica_menu.mp3
-            musica_juego.mp3
-    """
+# ------------------------------------------------------------------ #
+#  Configuración y estado global                                       #
+# ------------------------------------------------------------------ #
 
-    # Nombres internos → nombre de archivo (sin extensión)
-    ARCHIVOS = {
-        "carne_puesta":   "carne_puesta",    # Al colocar carne en la parrilla
-        "carne_punto":    "carne_punto",      # Al retirar la carne a punto (éxito)
-        "carne_quemada":  "carne_quemada",    # Cuando la carne se quema
-        "carbon":         "carbon",           # Al agregar carbón
-        "ruido_parrilla": "ruido_parrilla",
-        "ambiente_juego": "ambiente_juego",
-    }
+CARPETA = "sounds"
+EXTENSIONES = [".wav", ".mp3", ".ogg"]
 
-    MUSICAS = {
-        "menu":  "musica_menu",
-        "juego": "musica_juego",
-    }
+ARCHIVOS = {
+    "carne_puesta":   "carne_puesta",
+    "carne_punto":    "carne_punto",
+    "carne_quemada":  "carne_quemada",
+    "carbon":         "carbon",
+    "ambiente_juego": "ambiente_juego",
+}
 
-    # Extensiones a probar en orden
-    EXTENSIONES = [".wav", ".mp3", ".ogg"]
+MUSICAS = {
+    "menu":  "musica_menu",
+    "juego": "musica_juego",
+}
 
-    def __init__(self, carpeta_sounds="sounds", volumen_efectos=0.8, volumen_musica=0.5):
-        """
-        Inicializa el gestor.
-        
-        Args:
-            carpeta_sounds: Ruta a la carpeta con los archivos de audio.
-            volumen_efectos: Volumen de efectos de sonido (0.0 a 1.0).
-            volumen_musica:  Volumen de la música de fondo (0.0 a 1.0).
-        """
-        # Inicializa el mixer si no fue inicializado todavía
-        if not pygame.mixer.get_init():
-            pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+# Estado interno (antes vivía dentro del objeto con self._...)
+_sonidos = {}
+_volumen_efectos = 0.8
+_volumen_musica = 0.5
+_muteado = False
+_musica_actual = None
 
-        self.carpeta = carpeta_sounds
-        self._volumen_efectos = volumen_efectos
-        self._volumen_musica = volumen_musica
-        self._muteado = False
-        self._musica_actual = None
+# ------------------------------------------------------------------ #
+#  Inicialización                                                      #
+# ------------------------------------------------------------------ #
 
-        # Diccionario donde se guardan los sonidos cargados
-        self._sonidos: dict[str, pygame.mixer.Sound] = {}
+def inicializar(carpeta="sounds", volumen_efectos=0.8, volumen_musica=0.5):
+    global CARPETA, _volumen_efectos, _volumen_musica
 
-        self._cargar_sonidos()
+    if not pygame.mixer.get_init():
+        pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
 
-    # ------------------------------------------------------------------ #
-    #  Carga                                                               #
-    # ------------------------------------------------------------------ #
+    CARPETA = carpeta
+    _volumen_efectos = volumen_efectos
+    _volumen_musica = volumen_musica
 
-    def _buscar_archivo(self, nombre_base: str) -> str | None:
-        """Busca el archivo probando distintas extensiones. Devuelve la ruta o None."""
-        for ext in self.EXTENSIONES:
-            ruta = os.path.join(self.carpeta, nombre_base + ext)
-            if os.path.isfile(ruta):
-                return ruta
-        return None
+    _cargar_sonidos()
 
-    def _cargar_sonidos(self):
-        """Carga todos los efectos de sonido. Los que no se encuentran se omiten con aviso."""
-        for clave, nombre_base in self.ARCHIVOS.items():
-            ruta = self._buscar_archivo(nombre_base)
-            if ruta:
-                try:
-                    sonido = pygame.mixer.Sound(ruta)
-                    sonido.set_volume(self._volumen_efectos)
-                    self._sonidos[clave] = sonido
-                    print(f"[Sonidos] ✓ Cargado: {ruta}")
-                except pygame.error as e:
-                    print(f"[Sonidos] ✗ Error al cargar '{ruta}': {e}")
-            else:
-                print(f"[Sonidos] ⚠ No encontrado: sounds/{nombre_base}.*  → se omite")
+# ------------------------------------------------------------------ #
+#  Carga                                                               #
+# ------------------------------------------------------------------ #
 
-    # ------------------------------------------------------------------ #
-    #  Efectos de sonido                                                   #
-    # ------------------------------------------------------------------ #
+def _buscar_archivo(nombre_base):
+    for ext in EXTENSIONES:
+        ruta = os.path.join(CARPETA, nombre_base + ext)
+        if os.path.isfile(ruta):
+            return ruta
+    return None
 
-    def reproducir(self, clave: str):
-        """
-        Reproduce un efecto de sonido por su clave.
-        
-        Claves disponibles:
-            "carne_puesta", "carne_punto", "carne_quemada", "carbon"
-        
-        No hace nada si el sonido no fue cargado o el juego está muteado.
-        """
-        if self._muteado:
-            return
-        sonido = self._sonidos.get(clave)
-        if sonido:
-            sonido.play()
+def _cargar_sonidos():
+    global _sonidos
+    for clave, nombre_base in ARCHIVOS.items():
+        ruta = _buscar_archivo(nombre_base)
+        if ruta:
+            try:
+                sonido = pygame.mixer.Sound(ruta)
+                sonido.set_volume(_volumen_efectos)
+                _sonidos[clave] = sonido
+                print(f"[Sonidos] ✓ Cargado: {ruta}")
+            except pygame.error as e:
+                print(f"[Sonidos] ✗ Error al cargar '{ruta}': {e}")
         else:
-            print(f"[Sonidos] ⚠ Clave desconocida o no cargada: '{clave}'")
+            print(f"[Sonidos] ⚠ No encontrado: sounds/{nombre_base}.*  → se omite")
 
-    # ------------------------------------------------------------------ #
-    #  Música de fondo                                                     #
-    # ------------------------------------------------------------------ #
+# ------------------------------------------------------------------ #
+#  Efectos de sonido                                                   #
+# ------------------------------------------------------------------ #
 
-    def reproducir_musica(self, clave: str, loops: int = -1):
-        """
-        Reproduce música de fondo en loop.
-        
-        Args:
-            clave:  "menu" o "juego"
-            loops:  -1 = infinito, 0 = una vez, N = N veces extra
-        
-        No reinicia la música si ya está sonando la misma.
-        """
-        if self._muteado:
-            return
+def reproducir(clave):
+    if _muteado:
+        return
+    sonido = _sonidos.get(clave)
+    if sonido:
+        sonido.play()
+    else:
+        print(f"[Sonidos] ⚠ Clave desconocida o no cargada: '{clave}'")
 
-        nombre_base = self.MUSICAS.get(clave)
-        if not nombre_base:
-            print(f"[Sonidos] ⚠ Clave de música desconocida: '{clave}'")
-            return
+# ------------------------------------------------------------------ #
+#  Música de fondo                                                     #
+# ------------------------------------------------------------------ #
 
-        if self._musica_actual == clave and pygame.mixer.music.get_busy():
-            return  # Ya está sonando, no reiniciar
+def reproducir_musica(clave, loops=-1):
+    global _musica_actual
+    if _muteado:
+        return
 
-        ruta = self._buscar_archivo(nombre_base)
-        if not ruta:
-            print(f"[Sonidos] ⚠ Archivo de música no encontrado: sounds/{nombre_base}.*")
-            return
+    nombre_base = MUSICAS.get(clave)
+    if not nombre_base:
+        print(f"[Sonidos] ⚠ Clave de música desconocida: '{clave}'")
+        return
 
-        try:
-            pygame.mixer.music.load(ruta)
-            pygame.mixer.music.set_volume(self._volumen_musica)
-            pygame.mixer.music.play(loops)
-            self._musica_actual = clave
-            print(f"[Sonidos] ♪ Música: {ruta}")
-        except pygame.error as e:
-            print(f"[Sonidos] ✗ Error al reproducir música '{ruta}': {e}")
+    if _musica_actual == clave and pygame.mixer.music.get_busy():
+        return
 
-    def reproducir_loop(self, clave: str, volumen: float = None):
-        if self._muteado:
-            return
-        sonido = self._sonidos.get(clave)
-        if sonido:
-            if volumen is not None:
-                sonido.set_volume(volumen)
-            sonido.play(loops=-1)
+    ruta = _buscar_archivo(nombre_base)
+    if not ruta:
+        print(f"[Sonidos] ⚠ Archivo de música no encontrado: sounds/{nombre_base}.*")
+        return
 
-    def detener_loop(self, clave: str):
-        sonido = self._sonidos.get(clave)
-        if sonido:
-            sonido.stop()        
+    try:
+        pygame.mixer.music.load(ruta)
+        pygame.mixer.music.set_volume(_volumen_musica)
+        pygame.mixer.music.play(loops)
+        _musica_actual = clave
+        print(f"[Sonidos] ♪ Música: {ruta}")
+    except pygame.error as e:
+        print(f"[Sonidos] ✗ Error al reproducir música '{ruta}': {e}")
 
-    def detener_musica(self):
-        """Detiene la música de fondo."""
-        pygame.mixer.music.stop()
-        self._musica_actual = None
+def reproducir_loop(clave, volumen=None):
+    if _muteado:
+        return
+    sonido = _sonidos.get(clave)
+    if sonido:
+        if volumen is not None:
+            sonido.set_volume(volumen)
+        sonido.play(loops=-1)
 
-    def pausar_musica(self):
-        """Pausa la música (se puede reanudar con reanudar_musica)."""
-        pygame.mixer.music.pause()
+def detener_loop(clave):
+    sonido = _sonidos.get(clave)
+    if sonido:
+        sonido.stop()
 
-    def reanudar_musica(self):
-        """Reanuda la música pausada."""
-        if not self._muteado:
-            pygame.mixer.music.unpause()
+def detener_musica():
+    global _musica_actual
+    pygame.mixer.music.stop()
+    _musica_actual = None
 
-    # ------------------------------------------------------------------ #
-    #  Volumen                                                             #
-    # ------------------------------------------------------------------ #
+def pausar_musica():
+    pygame.mixer.music.pause()
 
-    def set_volumen_efectos(self, volumen: float):
-        """Cambia el volumen de efectos en tiempo real (0.0 a 1.0)."""
-        self._volumen_efectos = max(0.0, min(1.0, volumen))
-        for sonido in self._sonidos.values():
-            sonido.set_volume(self._volumen_efectos)
+def reanudar_musica():
+    if not _muteado:
+        pygame.mixer.music.unpause()
 
-    def set_volumen_musica(self, volumen: float):
-        """Cambia el volumen de la música en tiempo real (0.0 a 1.0)."""
-        self._volumen_musica = max(0.0, min(1.0, volumen))
-        pygame.mixer.music.set_volume(self._volumen_musica)
+# ------------------------------------------------------------------ #
+#  Volumen                                                             #
+# ------------------------------------------------------------------ #
 
-    # ------------------------------------------------------------------ #
-    #  Mute                                                                #
-    # ------------------------------------------------------------------ #
+def set_volumen_efectos(volumen):
+    global _volumen_efectos
+    _volumen_efectos = max(0.0, min(1.0, volumen))
+    for sonido in _sonidos.values():
+        sonido.set_volume(_volumen_efectos)
 
-    def toggle_mute(self):
-        """Alterna entre muteado y normal. Devuelve el nuevo estado (True = muteado)."""
-        self._muteado = not self._muteado
-        if self._muteado:
-            pygame.mixer.music.set_volume(0)
-            for sonido in self._sonidos.values():
-                sonido.set_volume(0)
-        else:
-            pygame.mixer.music.set_volume(self._volumen_musica)
-            for sonido in self._sonidos.values():
-                sonido.set_volume(self._volumen_efectos)
-        return self._muteado
+def set_volumen_musica(volumen):
+    global _volumen_musica
+    _volumen_musica = max(0.0, min(1.0, volumen))
+    pygame.mixer.music.set_volume(_volumen_musica)
 
-    @property
-    def muteado(self) -> bool:
-        return self._muteado
+# ------------------------------------------------------------------ #
+#  Mute                                                                #
+# ------------------------------------------------------------------ #
+
+def toggle_mute():
+    global _muteado
+    _muteado = not _muteado
+    if _muteado:
+        pygame.mixer.music.set_volume(0)
+        for sonido in _sonidos.values():
+            sonido.set_volume(0)
+    else:
+        pygame.mixer.music.set_volume(_volumen_musica)
+        for sonido in _sonidos.values():
+            sonido.set_volume(_volumen_efectos)
+    return _muteado
+
+def esta_muteado():
+    return _muteado

@@ -1,9 +1,11 @@
 import pygame
 import sys
 import random
+import sonidos
 from carnes import precarga_imagenes_carnes, spawnear_carne, actualizar_logica_carnes, voltear_carne, chamuscar, servir, remover
 
-def iniciar_juego(sonidos):
+def iniciar_juego():
+    pygame.font.init()
 
     ANCHO = 1200
     ALTO = 900
@@ -92,7 +94,7 @@ def iniciar_juego(sonidos):
         tiempo_restante = TIEMPO_PARTIDA - tiempo_transcurrido
         if tiempo_restante <= 0:
             tiempo_restante = 0
-            game_over(pantalla,"¡Se termino el tiempo!", sonidos)
+            game_over(pantalla,"¡Se termino el tiempo!")
             return
 
         #funcionalidad del carbon 
@@ -117,7 +119,7 @@ def iniciar_juego(sonidos):
             # Límite inferior de seguridad
             if nivel_carbon < 1:
                 nivel_carbon = 0
-                game_over(pantalla,"¡Que mal! Se te apago el fuego :(", sonidos)
+                game_over(pantalla,"¡Que mal! Se te apago el fuego :(")
                 return
         
             ultimo_tiempo_carbon = tiempo_actual
@@ -215,7 +217,7 @@ def iniciar_juego(sonidos):
                                 remover(carne, spawn_de_carnes)
         
         # --- ACTUALIZACIÓN ---
-        actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon, sonidos)
+        actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon)
         
         # --- DIBUJO ---
         pantalla.fill((40, 40, 40))
@@ -283,7 +285,7 @@ def iniciar_juego(sonidos):
         pygame.display.flip()
         reloj.tick(60)
 
-def game_over(pantalla, mensaje, sonidos): #agregar jugador y los puntos obtenidos
+def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
 
     reloj = pygame.time.Clock()
 
