@@ -50,7 +50,7 @@ def spawnear_carne(x_slot, y_slot, indice_slot):
     return nueva_carne
 
 
-def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon):
+def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon, sonidos):
     """Controla la cocción de las carnes que están en la parrilla"""
     for carne in spawn_de_carnes:
         if carne["ubicacion"] == "slots":
@@ -66,10 +66,10 @@ def actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon):
                 carne["cocinando"] += 10 * dt
    
             if carne["cocinando"] >= (carne["coccion_maxima"] *0.8) and not carne["lado_b"]:
-                    chamuscar(carne, jugador)
+                    chamuscar(carne, jugador, sonidos)
                     
         else:
-            chamuscar(carne, jugador)
+            chamuscar(carne, jugador, sonidos)
 
 def voltear_carne(carne, jugador):
     if not carne["lado_b"]:
@@ -91,13 +91,14 @@ def voltear_carne(carne, jugador):
                     break
             
 
-def chamuscar(carne, jugador):
+def chamuscar(carne, jugador, sonidos):
     carne["cocinando"] = 0
     carne["estado_crudo"] = False
     carne["estado_cocido"] = False
     carne["estado_quemado"] = True
     carne["puntaje"]= 0.0
     jugador["resultado"] -= carne["coccion_maxima"] *10 * 0.5 #se le resta al jugador la mitad de los puntos maximos de esta carne.
+    sonidos.reproducir("carne_quemada")
     
 def servir(carne, jugador, spawn_de_carnes):
     #si sirve la carne entre el 90% y 110% está ok y recibe todos los puntos.

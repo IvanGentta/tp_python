@@ -26,6 +26,8 @@ class GestorSonidos:
         "carne_punto":    "carne_punto",      # Al retirar la carne a punto (éxito)
         "carne_quemada":  "carne_quemada",    # Cuando la carne se quema
         "carbon":         "carbon",           # Al agregar carbón
+        "ruido_parrilla": "ruido_parrilla",
+        "ambiente_juego": "ambiente_juego",
     }
 
     MUSICAS = {
@@ -146,6 +148,20 @@ class GestorSonidos:
             print(f"[Sonidos] ♪ Música: {ruta}")
         except pygame.error as e:
             print(f"[Sonidos] ✗ Error al reproducir música '{ruta}': {e}")
+
+    def reproducir_loop(self, clave: str, volumen: float = None):
+        if self._muteado:
+            return
+        sonido = self._sonidos.get(clave)
+        if sonido:
+            if volumen is not None:
+                sonido.set_volume(volumen)
+            sonido.play(loops=-1)
+
+    def detener_loop(self, clave: str):
+        sonido = self._sonidos.get(clave)
+        if sonido:
+            sonido.stop()        
 
     def detener_musica(self):
         """Detiene la música de fondo."""

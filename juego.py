@@ -9,20 +9,6 @@ def iniciar_juego(sonidos):
     ALTO = 900
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
 
-<<<<<<< HEAD
-    fondo = pygame.image.load("img/patio.png").convert()
-    carbon = pygame.image.load("img/carbon.png").convert_alpha()
-    parrilla = pygame.image.load("img/parrilla_media.png").convert_alpha()
-
-    carbon = pygame.transform.scale(carbon, (164, 242))
-    parrilla = pygame.transform.scale(parrilla, (972, 700))
-    fondo = pygame.transform.scale(fondo, (ANCHO, ALTO))
-
-    reloj = pygame.time.Clock()
-
-    # Cambia la música al entrar al juego
-    sonidos.reproducir_musica("juego")
-=======
     # Precargamos los imagenes una sola vez en la memoria
     precarga_imagenes_carnes()
     fondo = pygame.image.load("img/patio.png").convert()
@@ -43,6 +29,10 @@ def iniciar_juego(sonidos):
 	
     reloj = pygame.time.Clock()
 
+    # Cambia la música al entrar al juego
+    sonidos.reproducir_musica("juego")
+    sonidos.reproducir_loop("ambiente_juego", volumen=0.3)    # música de fondo bajita
+    
     # --- CONFIGURACIÓN DE LOS SLOTS SUPERIORES ---
     # Guardamos las coordenadas X fijas de cada uno de los 4 slots de preparación
     slots_spawn = [
@@ -82,7 +72,6 @@ def iniciar_juego(sonidos):
     # --- TEMPORIZADOR DE GENERACIÓN INFINITA ---
     # Definimos en cuántos segundos se generará el próximo alimento (entre 5.0 y 10.0)
     timer_generacion = random.uniform(2.5, 6.5)
->>>>>>> 75e8fac061142ace7549ad8e30c0e2d54775a46e
 
     ejecutando = True
 
@@ -103,7 +92,7 @@ def iniciar_juego(sonidos):
         tiempo_restante = TIEMPO_PARTIDA - tiempo_transcurrido
         if tiempo_restante <= 0:
             tiempo_restante = 0
-            game_over(pantalla,"¡Se termino el tiempo!")
+            game_over(pantalla,"¡Se termino el tiempo!", sonidos)
             return
 
         #funcionalidad del carbon 
@@ -128,7 +117,7 @@ def iniciar_juego(sonidos):
             # Límite inferior de seguridad
             if nivel_carbon < 1:
                 nivel_carbon = 0
-                game_over(pantalla,"¡Que mal! Se te apago el fuego :(")
+                game_over(pantalla,"¡Que mal! Se te apago el fuego :(", sonidos)
                 return
         
             ultimo_tiempo_carbon = tiempo_actual
@@ -182,6 +171,7 @@ def iniciar_juego(sonidos):
                     nivel_carbon += 10
                     if nivel_carbon > 100:
                         nivel_carbon = 100
+                    sonidos.reproducir("carbon")
 
                 for carne in spawn_de_carnes:
                     if carne["rect"].collidepoint(evento.pos):
@@ -199,6 +189,7 @@ def iniciar_juego(sonidos):
                                     # Liberamos el slot de spawn para que pueda aparecer una carne nueva ahí
                                     idx_slot_viejo = carne["slot_origen"]
                                     slots_spawn[idx_slot_viejo]["en_uso"] = False
+                                    sonidos.reproducir("carne_puesta")
                                     break
                                     
                         # Click a una carne que esta en la parrilla:
@@ -209,12 +200,14 @@ def iniciar_juego(sonidos):
                                 if carne["lado_b"] == False:
                                     if carne["cocinando"] >= carne["coccion_maxima"]*0.4:
                                         voltear_carne(carne, jugador)
+                                        sonidos.reproducir("carne_puesta")
                                     else:
                                         jugador["resultado"] -= carne["coccion_maxima"]*10 *0.1
                                 #CASO C: Servir
                                 elif carne["lado_b"] == True:
                                     if carne["cocinando"] >= carne["coccion_maxima"]*0.8:
                                         servir(carne, jugador, spawn_de_carnes)
+                                        sonidos.reproducir("carne_punto")
                                     else:
                                         jugador["resultado"] -= carne["coccion_maxima"] * 10 * 0.1
                             #CASO D: Clickea una carne quemada para desechar
@@ -222,7 +215,7 @@ def iniciar_juego(sonidos):
                                 remover(carne, spawn_de_carnes)
         
         # --- ACTUALIZACIÓN ---
-        actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon)
+        actualizar_logica_carnes(spawn_de_carnes, dt, jugador, nivel_carbon, sonidos)
         
         # --- DIBUJO ---
         pantalla.fill((40, 40, 40))
@@ -290,7 +283,7 @@ def iniciar_juego(sonidos):
         pygame.display.flip()
         reloj.tick(60)
 
-def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
+def game_over(pantalla, mensaje, sonidos): #agregar jugador y los puntos obtenidos
 
     reloj = pygame.time.Clock()
 
@@ -327,23 +320,10 @@ def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
 
             if evento.type == pygame.MOUSEBUTTONDOWN:
 
-<<<<<<< HEAD
-                # Botón carbón (ajustá el Rect a la posición real de tu imagen)
-                rect_carbon = pygame.Rect(1020, 650, 164, 242)
-                if rect_carbon.collidepoint(evento.pos):
-                    sonidos.reproducir("carbon")
-
-                # Cuando tus compañeros agreguen la lógica de poner/retirar carne,
-                # los llamados serán así:
-                #   sonidos.reproducir("carne_puesta")   ← al colocar
-                #   sonidos.reproducir("carne_punto")    ← al retirar a punto
-                #   sonidos.reproducir("carne_quemada")  ← cuando se quema
-
-        pantalla.blit(fondo, (0, 0))
-        pantalla.blit(carbon, (1020, 650))
-        pantalla.blit(parrilla, (10, 190))
-=======
+                
                 if boton_menu.collidepoint(evento.pos):
+                    sonidos.reproducir_musica("menu")
+                    sonidos.detener_loop("ambiente_juego")
                     return
 
         pantalla.fill((20, 20, 20))
@@ -399,7 +379,6 @@ def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
             texto_menu,
             rect_menu
         )
->>>>>>> 75e8fac061142ace7549ad8e30c0e2d54775a46e
 
         pygame.display.flip()
         reloj.tick(60)

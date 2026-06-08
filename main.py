@@ -53,12 +53,7 @@ while ejecutando:
         if evento.type == pygame.MOUSEBUTTONDOWN:
 
             if boton_jugar.collidepoint(evento.pos):
-<<<<<<< HEAD
-                ejecutando = False
                 iniciar_juego(sonidos)
-=======
-                iniciar_juego()
->>>>>>> 75e8fac061142ace7549ad8e30c0e2d54775a46e
 
             if boton_salir.collidepoint(evento.pos):
                 ejecutando = False
