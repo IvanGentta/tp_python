@@ -1,9 +1,11 @@
 import pygame
 import sys
 import random
+import sonidos
 from carnes import precarga_imagenes_carnes, spawnear_carne, actualizar_logica_carnes, voltear_carne, chamuscar, servir, remover
 
 def iniciar_juego():
+    pygame.font.init()
 
     ANCHO = 1200
     ALTO = 900
@@ -29,6 +31,10 @@ def iniciar_juego():
 	
     reloj = pygame.time.Clock()
 
+    # Cambia la música al entrar al juego
+    sonidos.reproducir_musica("juego")
+    sonidos.reproducir_loop("ambiente_juego", volumen=0.3)    # música de fondo bajita
+    
     # --- CONFIGURACIÓN DE LOS SLOTS SUPERIORES ---
     # Guardamos las coordenadas X fijas de cada uno de los 4 slots de preparación
     slots_spawn = [
@@ -167,6 +173,7 @@ def iniciar_juego():
                     nivel_carbon += 10
                     if nivel_carbon > 100:
                         nivel_carbon = 100
+                    sonidos.reproducir("carbon")
 
                 for carne in spawn_de_carnes:
                     if carne["rect"].collidepoint(evento.pos):
@@ -184,6 +191,7 @@ def iniciar_juego():
                                     # Liberamos el slot de spawn para que pueda aparecer una carne nueva ahí
                                     idx_slot_viejo = carne["slot_origen"]
                                     slots_spawn[idx_slot_viejo]["en_uso"] = False
+                                    sonidos.reproducir("carne_puesta")
                                     break
                                     
                         # Click a una carne que esta en la parrilla:
@@ -194,12 +202,14 @@ def iniciar_juego():
                                 if carne["lado_b"] == False:
                                     if carne["cocinando"] >= carne["coccion_maxima"]*0.4:
                                         voltear_carne(carne, jugador)
+                                        sonidos.reproducir("carne_puesta")
                                     else:
                                         jugador["resultado"] -= carne["coccion_maxima"]*10 *0.1
                                 #CASO C: Servir
                                 elif carne["lado_b"] == True:
                                     if carne["cocinando"] >= carne["coccion_maxima"]*0.8:
                                         servir(carne, jugador, spawn_de_carnes)
+                                        sonidos.reproducir("carne_punto")
                                     else:
                                         jugador["resultado"] -= carne["coccion_maxima"] * 10 * 0.1
                             #CASO D: Clickea una carne quemada para desechar
@@ -312,7 +322,10 @@ def game_over(pantalla, mensaje): #agregar jugador y los puntos obtenidos
 
             if evento.type == pygame.MOUSEBUTTONDOWN:
 
+                
                 if boton_menu.collidepoint(evento.pos):
+                    sonidos.reproducir_musica("menu")
+                    sonidos.detener_loop("ambiente_juego")
                     return
 
         pantalla.fill((20, 20, 20))

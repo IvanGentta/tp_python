@@ -1,6 +1,7 @@
 import pygame
 import juego
 import random
+import sonidos
 
 # Diccionarios base con la configuración de cada alimento.
 
@@ -98,6 +99,7 @@ def chamuscar(carne, jugador):
     carne["estado_quemado"] = True
     carne["puntaje"]= 0.0
     jugador["resultado"] -= carne["coccion_maxima"] *10 * 0.5 #se le resta al jugador la mitad de los puntos maximos de esta carne.
+    sonidos.reproducir("carne_quemada")
     
 def servir(carne, jugador, spawn_de_carnes):
     #si sirve la carne entre el 90% y 110% está ok y recibe todos los puntos.
