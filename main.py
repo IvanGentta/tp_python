@@ -1,6 +1,10 @@
 import pygame
 import sys
 from juego import iniciar_juego
+from sonidos import GestorSonidos
+
+sonidos = GestorSonidos()
+sonidos.reproducir_musica("menu")  # arranca la música del menú
 
 # Inicializa todos los módulos de pygame
 pygame.init()
@@ -49,7 +53,7 @@ while ejecutando:
 
             if boton_jugar.collidepoint(evento.pos):
                 ejecutando = False
-                iniciar_juego()
+                iniciar_juego(sonidos)
 
             if boton_salir.collidepoint(evento.pos):
                 ejecutando = False
