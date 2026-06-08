@@ -40,25 +40,20 @@ def iniciar_juego():
         {"x": 175, "y": 100, "en_uso": False},
         {"x": 375, "y": 100, "en_uso": False},
         {"x": 575, "y": 100, "en_uso": False},
-        {"x": 825, "y": 100, "en_uso": False}
+        {"x": 725, "y": 100, "en_uso": False}
     ]
     
     # --- CONFIGURACIÓN DE LA PARRILLA ---
     lugares_parrilla = [
-        {"x": 375, "y": 550, "en_uso": False},
-        {"x": 575, "y": 550, "en_uso": False},
-        {"x": 175, "y": 550, "en_uso": False},
-        {"x": 825, "y": 550, "en_uso": False},
-        
-        {"x": 375, "y": 750, "en_uso": False},
-        {"x": 575, "y": 750, "en_uso": False},
-        {"x": 375, "y": 350, "en_uso": False},
-        {"x": 575, "y": 350, "en_uso": False},
-        
-        {"x": 175, "y": 750, "en_uso": False},
-        {"x": 825, "y": 750, "en_uso": False},
-        {"x": 175, "y": 350, "en_uso": False},
-        {"x": 825, "y": 350, "en_uso": False}
+        # Fila Superior (Y: 450)
+    {"x": 250, "y": 450, "en_uso": False}, # Izquierda
+    {"x": 500, "y": 450, "en_uso": False}, # Centro
+    {"x": 750, "y": 450, "en_uso": False}, # Derecha
+
+    # Fila Inferior (Y: 650)
+    {"x": 250, "y": 650, "en_uso": False}, # Izquierda
+    {"x": 500, "y": 650, "en_uso": False}, # Centro
+    {"x": 750, "y": 650, "en_uso": False}  # Derecha
     ]
     
     # Lista dinámica donde se guardarán todas las carnes que están vivas en pantalla
@@ -100,7 +95,7 @@ def iniciar_juego():
 
     imagen_perro = pygame.transform.scale(
         imagen_perro,
-        (200, 200)
+        (200, 275)
     )
 
     perro_rect = imagen_perro.get_rect(
