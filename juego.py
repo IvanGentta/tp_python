@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import sonidos
+import puntajes
 from carnes import precarga_imagenes_carnes, spawnear_carne, actualizar_logica_carnes, voltear_carne, chamuscar, servir, remover
 
 def iniciar_juego():
@@ -111,6 +112,7 @@ def iniciar_juego():
         tiempo_restante = TIEMPO_PARTIDA - tiempo_transcurrido
         if tiempo_restante <= 0:
             tiempo_restante = 0
+            sonidos.reproducir("victoria")
             game_over(pantalla,"¡Se termino el tiempo!", jugador["resultado"])
             return
 
@@ -136,6 +138,7 @@ def iniciar_juego():
             # Límite inferior de seguridad
             if nivel_carbon < 1:
                 nivel_carbon = 0
+                sonidos.reproducir("derrota")
                 game_over(pantalla,"¡Que mal! Se te apago el fuego :(", jugador["resultado"])
                 print(f"Obtubiste {jugador["resultado"]} puntos.")
                 return
@@ -405,10 +408,13 @@ def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenid
 
     boton_menu = pygame.Rect(
         300,     # más a la izquierda
-        520,
+        620,
         600,     # más ancho
         90
     )
+
+    nombre = ""
+    guardado = False
 
     while True:
 
@@ -418,10 +424,21 @@ def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenid
                 pygame.quit()
                 sys.exit()
 
+            if evento.type == pygame.KEYDOWN and not guardado:
+                if evento.key == pygame.K_BACKSPACE:
+                    nombre = nombre[:-1]
+                elif evento.key == pygame.K_RETURN:
+                    puntajes.guardar_puntaje(nombre, puntaje)
+                    guardado = True
+                elif len(nombre) < 15:
+                    nombre += evento.unicode
+
             if evento.type == pygame.MOUSEBUTTONDOWN:
 
                 
                 if boton_menu.collidepoint(evento.pos):
+                    if not guardado:
+                        puntajes.guardar_puntaje(nombre, puntaje)
                     sonidos.reproducir_musica("menu")
                     sonidos.detener_loop("ambiente_juego")
                     return
@@ -471,6 +488,19 @@ def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenid
         texto_puntos,
         rect_puntos
         )
+
+        texto_label = fuente_mensaje.render("Ingresá tu nombre:", True, (200, 200, 200))
+        pantalla.blit(texto_label, texto_label.get_rect(center=(600, 455)))
+
+        if not guardado:
+            caja = pygame.Rect(350, 475, 500, 45)
+            pygame.draw.rect(pantalla, (255, 255, 255), caja, border_radius=8)
+            fuente_input = pygame.font.SysFont("arial", 34)
+            texto_nombre = fuente_input.render(nombre, True, (0, 0, 0))
+            pantalla.blit(texto_nombre, texto_nombre.get_rect(center=caja.center))
+        else:
+            texto_ok = fuente_mensaje.render(f"¡Guardado, {nombre or 'Anónimo'}!", True, (0, 255, 0))
+            pantalla.blit(texto_ok, texto_ok.get_rect(center=(600, 490)))
         
         # Botón
         pygame.draw.rect(
