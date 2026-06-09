@@ -1,7 +1,10 @@
 import pygame
 import sys
-from juego import iniciar_juego
 import sonidos
+from juego import iniciar_juego
+from puntajes import cargar_puntajes
+from highscores import mostrar_highscores
+
 
 
 # Inicializa todos los módulos de pygame
@@ -55,6 +58,9 @@ while ejecutando:
             if boton_jugar.collidepoint(evento.pos):
                 iniciar_juego()
                 sonidos.reproducir_musica("menu")
+
+            if boton_hs.collidepoint(evento.pos):
+                mostrar_highscores(pantalla, reloj)
                 
             if boton_salir.collidepoint(evento.pos):
                 ejecutando = False

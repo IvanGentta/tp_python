@@ -15,7 +15,9 @@ ARCHIVOS = {
     "carbon":         "carbon",
     "ambiente_juego": "ambiente_juego",
     "ladrido": "ladrido",
-    "risa": "risa"
+    "risa": "risa",
+    "victoria":       "victoria",
+    "derrota":        "derrota",
 }
 
 MUSICAS = {
@@ -23,7 +25,6 @@ MUSICAS = {
     "juego": "musica_juego",
 }
 
-# Estado interno (antes vivía dentro del objeto con self._...)
 _sonidos = {}
 _volumen_efectos = 0.8
 _volumen_musica = 0.5
@@ -161,7 +162,7 @@ def set_volumen_musica(volumen):
 #  Mute                                                                #
 # ------------------------------------------------------------------ #
 
-def toggle_mute():
+def mute():
     global _muteado
     _muteado = not _muteado
     if _muteado:
