@@ -1,6 +1,7 @@
 import pygame
 import sys
 import sonidos
+from instrucciones import mostrar_instrucciones
 from juego import iniciar_juego
 from puntajes import cargar_puntajes
 from highscores import mostrar_highscores
@@ -59,6 +60,9 @@ while ejecutando:
                 iniciar_juego()
                 sonidos.reproducir_musica("menu")
 
+            if boton_instrucciones.collidepoint(evento.pos):
+                mostrar_instrucciones(pantalla, reloj)
+            
             if boton_hs.collidepoint(evento.pos):
                 mostrar_highscores(pantalla, reloj)
                 
