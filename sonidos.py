@@ -1,5 +1,6 @@
 import pygame
 import os
+from rutas import recurso
 
 # ------------------------------------------------------------------ #
 #  Configuración y estado global                                       #
@@ -53,9 +54,13 @@ def inicializar(carpeta="sounds", volumen_efectos=0.8, volumen_musica=0.5):
 
 def _buscar_archivo(nombre_base):
     for ext in EXTENSIONES:
-        ruta = os.path.join(CARPETA, nombre_base + ext)
+        ruta = recurso(
+            os.path.join(CARPETA, nombre_base + ext)
+        )
+
         if os.path.isfile(ruta):
             return ruta
+
     return None
 
 def _cargar_sonidos():

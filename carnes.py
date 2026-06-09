@@ -2,6 +2,7 @@ import pygame
 import juego
 import sonidos
 import random
+from rutas import recurso
 
 # Diccionarios base con la configuración de cada alimento.
 
@@ -17,8 +18,8 @@ DATOS_BASE_CARNES = [
 def precarga_imagenes_carnes():
     """Carga las 12 texturas cocido/crudo en la memoria una sola vez"""
     for base in DATOS_BASE_CARNES:
-        base["img_cruda"] = pygame.image.load(base["img_cruda_path"]).convert_alpha()
-        base["img_cocida"] = pygame.image.load(base["img_cocida_path"]).convert_alpha()
+        base["img_cruda"] = pygame.image.load(recurso(base["img_cruda_path"])).convert_alpha()
+        base["img_cocida"] = pygame.image.load(recurso(base["img_cocida_path"])).convert_alpha()
         
 
 def spawnear_carne(x_slot, y_slot, indice_slot):

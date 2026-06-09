@@ -1,11 +1,12 @@
 import pygame
 import sys
+from rutas import recurso
 
 def mostrar_instrucciones(pantalla, reloj):
     # 1. Cargamos las 6 imágenes en una lista
     imagenes = []
     for i in range (1, 7):
-        imagenes += [pygame.image.load(f"instrucciones/{i}.jpg").convert()]
+        imagenes += [pygame.image.load(recurso(f"instrucciones/{i}.jpg")).convert()]
     
     # 2. Variables de control
     indice_actual = 0

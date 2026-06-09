@@ -3,6 +3,7 @@ import sys
 import random
 import sonidos
 import puntajes
+from rutas import recurso
 from carnes import precarga_imagenes_carnes, spawnear_carne, actualizar_logica_carnes, voltear_carne, chamuscar, servir, remover
 
 def iniciar_juego():
@@ -13,12 +14,12 @@ def iniciar_juego():
 
     # Precargamos los imagenes una sola vez en la memoria
     precarga_imagenes_carnes()
-    fondo = pygame.image.load("img/patio.png").convert()
-    carbon = pygame.image.load("img/carbon.png").convert_alpha()
-    fuego_alto = pygame.image.load("img/parrilla_alta.png").convert_alpha()
-    fuego_medio = pygame.image.load("img/parrilla_media.png").convert_alpha()
-    fuego_bajo = pygame.image.load("img/parrilla_baja.png").convert_alpha()
-    img_quemada = pygame.image.load("img/ceniza.png").convert_alpha()
+    fondo = pygame.image.load(recurso("img/patio.png")).convert_alpha()
+    carbon = pygame.image.load(recurso("img/carbon.png")).convert_alpha()
+    fuego_alto = pygame.image.load(recurso("img/parrilla_alta.png")).convert_alpha()
+    fuego_medio = pygame.image.load(recurso("img/parrilla_media.png")).convert_alpha()
+    fuego_bajo = pygame.image.load(recurso("img/parrilla_baja.png")).convert_alpha()
+    img_quemada = pygame.image.load(recurso("img/ceniza.png")).convert_alpha()
     
     carbon = pygame.transform.scale(carbon, (164, 242))
     fuego_alto = pygame.transform.scale(fuego_alto, (972, 700))
@@ -90,9 +91,9 @@ def iniciar_juego():
     clicks_perro = 0
     inicio_perro = 0
 
-    imagen_perro = pygame.image.load(
+    imagen_perro = pygame.image.load(recurso(
         "img/perro.png"
-    ).convert_alpha()
+    )).convert_alpha()
 
     imagen_perro = pygame.transform.scale(
         imagen_perro,

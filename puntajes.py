@@ -1,7 +1,10 @@
 import json
 import os
 
-ARCHIVO = "puntajes.json"
+ARCHIVO = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "puntajes.json"
+)
 MAX_PUNTAJES = 10  # Cantidad máxima de puntajes guardados
 
 

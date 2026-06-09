@@ -5,6 +5,15 @@ from instrucciones import mostrar_instrucciones
 from juego import iniciar_juego
 from puntajes import cargar_puntajes
 from highscores import mostrar_highscores
+from rutas import recurso
+
+'''
+Autores:
+    Aguirre Christian Gustavo,
+    Bogdanoff Fernando,
+    Gentta Ivan.
+
+'''
 
 
 
@@ -28,7 +37,7 @@ fuente_titulo = pygame.font.SysFont("arial", 60, bold=True)
 fuente_boton = pygame.font.SysFont("arial", 40)
 
 # Img fondo
-fondo_menu = pygame.image.load("img/parrilla_alta.png").convert()
+fondo_menu = pygame.image.load(recurso("img/parrilla_alta.png")).convert()
 
 fondo_menu = pygame.transform.scale(
     fondo_menu,
@@ -191,6 +200,23 @@ while ejecutando:
     pantalla.blit(
         texto_salir,
         rect_texto_salir
+    )
+
+    fuente_autores = pygame.font.SysFont("arial", 20)
+
+    texto_autores = fuente_autores.render(
+    "Creado por: Christian Aguirre | Fernando Bogdanoff | Iván Gentta",
+    True,
+    (255, 255, 255)
+    )
+
+    rect_autores = texto_autores.get_rect(
+        center=(ANCHO // 2, ALTO - 20)
+    )
+    
+    pantalla.blit(
+        texto_autores,
+        rect_autores
     )
 
     pygame.display.flip()
