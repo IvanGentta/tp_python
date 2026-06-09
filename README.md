@@ -25,6 +25,7 @@ El objetivo es cocinar distintos tipos de carne en la parrilla, administrando co
 Instalar dependencias:
 
 pip install pygame
+
 pip install pyinstaller
 
 Generar el ejecutable:
@@ -45,6 +46,7 @@ dist/
 
 ## Estructura
 
+```text
 tp_python/
 │
 ├── main.py
@@ -55,9 +57,9 @@ tp_python/
 ├── highscores.py
 ├── puntajes.py
 ├── rutas.py
+├── README.md
 │
 ├── img/
 ├── sounds/
-├── instrucciones/
-│
-└── README.md
+└── instrucciones/
+```
