@@ -45,6 +45,7 @@ dist/
 
 ## Estructura
 
+```text
 tp_python/
 │
 ├── main.py
@@ -55,9 +56,9 @@ tp_python/
 ├── highscores.py
 ├── puntajes.py
 ├── rutas.py
+├── README.md
 │
 ├── img/
 ├── sounds/
-├── instrucciones/
-│
-└── README.md
+└── instrucciones/
+```

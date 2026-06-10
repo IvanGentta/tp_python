@@ -147,38 +147,3 @@ def pausar_musica():
 def reanudar_musica():
     if not _muteado:
         pygame.mixer.music.unpause()
-
-# ------------------------------------------------------------------ #
-#  Volumen                                                             #
-# ------------------------------------------------------------------ #
-
-def set_volumen_efectos(volumen):
-    global _volumen_efectos
-    _volumen_efectos = max(0.0, min(1.0, volumen))
-    for sonido in _sonidos.values():
-        sonido.set_volume(_volumen_efectos)
-
-def set_volumen_musica(volumen):
-    global _volumen_musica
-    _volumen_musica = max(0.0, min(1.0, volumen))
-    pygame.mixer.music.set_volume(_volumen_musica)
-
-# ------------------------------------------------------------------ #
-#  Mute                                                                #
-# ------------------------------------------------------------------ #
-
-def mute():
-    global _muteado
-    _muteado = not _muteado
-    if _muteado:
-        pygame.mixer.music.set_volume(0)
-        for sonido in _sonidos.values():
-            sonido.set_volume(0)
-    else:
-        pygame.mixer.music.set_volume(_volumen_musica)
-        for sonido in _sonidos.values():
-            sonido.set_volume(_volumen_efectos)
-    return _muteado
-
-def esta_muteado():
-    return _muteado

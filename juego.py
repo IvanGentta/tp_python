@@ -387,7 +387,7 @@ def iniciar_juego():
         pygame.display.flip()
         reloj.tick(60)
 
-def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenidos
+def game_over(pantalla, mensaje, puntaje): 
 
     reloj = pygame.time.Clock()
 
@@ -416,6 +416,7 @@ def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenid
 
     nombre = ""
     guardado = False
+    inicio_game_over = pygame.time.get_ticks()
 
     while True:
 
@@ -437,7 +438,10 @@ def game_over(pantalla, mensaje, puntaje): #agregar jugador y los puntos obtenid
             if evento.type == pygame.MOUSEBUTTONDOWN:
 
                 
-                if boton_menu.collidepoint(evento.pos):
+                if (
+                    boton_menu.collidepoint(evento.pos)
+                    and pygame.time.get_ticks() - inicio_game_over > 500
+                ):
                     if not guardado:
                         puntajes.guardar_puntaje(nombre, puntaje)
                     sonidos.reproducir_musica("menu")
