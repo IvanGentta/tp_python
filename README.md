@@ -25,6 +25,7 @@ El objetivo es cocinar distintos tipos de carne en la parrilla, administrando co
 Instalar dependencias:
 
 pip install pygame
+
 pip install pyinstaller
 
 Generar el ejecutable:
